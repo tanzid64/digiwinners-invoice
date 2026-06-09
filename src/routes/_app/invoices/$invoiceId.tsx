@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { DocItemsTable } from "#/components/doc-items-table.tsx";
 import { PdfButton } from "#/components/pdf-button.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
@@ -96,6 +97,7 @@ function InvoiceDetail() {
 	async function remove() {
 		if (!confirm(`Delete ${inv.number}?`)) return;
 		await deleteInvoice({ data: inv.id });
+		toast.success("Invoice deleted");
 		await router.navigate({ to: "/invoices" });
 	}
 
@@ -120,6 +122,7 @@ function InvoiceDetail() {
 							await setInvoiceStatus({
 								data: { id: inv.id, status: v as (typeof STATUSES)[number] },
 							});
+							toast.success(`Status set to ${v.replace("_", " ")}`);
 							router.invalidate();
 						}}
 					>
@@ -220,6 +223,7 @@ function InvoiceDetail() {
 												size="icon-sm"
 												onClick={async () => {
 													await deletePayment({ data: p.id });
+													toast.success("Payment removed");
 													router.invalidate();
 												}}
 											>
@@ -291,6 +295,7 @@ function RecordPayment({
 			setReference("");
 			setAccount("");
 			setNotes("");
+			toast.success("Payment recorded");
 			onSaved();
 		} finally {
 			setBusy(false);

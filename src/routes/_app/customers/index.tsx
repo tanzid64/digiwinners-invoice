@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card } from "#/components/ui/card.tsx";
@@ -45,19 +47,17 @@ function CustomersList() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Customers</h1>
-					<p className="text-muted-foreground">
-						{customers.length} total · {filtered.length} shown
-					</p>
-				</div>
-				<Button asChild>
-					<Link to="/customers/new">
-						<Plus className="size-4" /> New customer
-					</Link>
-				</Button>
-			</div>
+			<PageHeader
+				title="Customers"
+				description={`${customers.length} total · ${filtered.length} shown`}
+				actions={
+					<Button asChild>
+						<Link to="/customers/new">
+							<Plus className="size-4" /> New customer
+						</Link>
+					</Button>
+				}
+			/>
 
 			<div className="flex flex-wrap gap-3">
 				<div className="relative max-w-xs flex-1">
@@ -98,11 +98,19 @@ function CustomersList() {
 					<TableBody>
 						{filtered.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={5}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No customers found.
+								<TableCell colSpan={5} className="p-0">
+									<EmptyState
+										icon={Users}
+										title="No customers found"
+										description="Add your first customer or adjust the filters."
+										action={
+											<Button asChild size="sm">
+												<Link to="/customers/new">
+													<Plus className="size-4" /> New customer
+												</Link>
+											</Button>
+										}
+									/>
 								</TableCell>
 							</TableRow>
 						) : (

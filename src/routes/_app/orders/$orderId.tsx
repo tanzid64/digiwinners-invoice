@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, FilePlus2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { DocItemsTable } from "#/components/doc-items-table.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
@@ -54,6 +55,7 @@ function OrderDetail() {
 
 	async function makeInvoice() {
 		const inv = await createInvoiceFromOrder({ data: o.id });
+		toast.success(`Invoice ${inv.number} created`);
 		await router.navigate({
 			to: "/invoices/$invoiceId",
 			params: { invoiceId: inv.id },
@@ -62,6 +64,7 @@ function OrderDetail() {
 	async function remove() {
 		if (!confirm(`Delete ${o.number}?`)) return;
 		await deleteOrder({ data: o.id });
+		toast.success("Order deleted");
 		await router.navigate({ to: "/orders" });
 	}
 
@@ -87,6 +90,7 @@ function OrderDetail() {
 							await setOrderStatus({
 								data: { id: o.id, status: v as (typeof STATUSES)[number] },
 							});
+							toast.success(`Status set to ${v.replace("_", " ")}`);
 							router.invalidate();
 						}}
 					>

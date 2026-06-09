@@ -360,9 +360,8 @@ function ReportTable<T>({
 								// biome-ignore lint/suspicious/noArrayIndexKey: report rows are positional
 								<TableRow key={idx}>
 									{cells.map((cell, i) => (
-										// biome-ignore lint/suspicious/noArrayIndexKey: fixed column layout
 										<TableCell
-											key={i}
+											key={cols[i]}
 											className={`${i >= cells.length - 1 ? "text-right tabular-nums" : ""} ${i === 0 ? "font-medium" : ""}`}
 										>
 											{cell}

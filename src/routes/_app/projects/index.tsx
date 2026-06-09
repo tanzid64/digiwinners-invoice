@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { FolderKanban, Plus } from "lucide-react";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card } from "#/components/ui/card.tsx";
@@ -22,17 +24,17 @@ function ProjectsList() {
 	const rows = Route.useLoaderData();
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between gap-3">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-					<p className="text-muted-foreground">{rows.length} total</p>
-				</div>
-				<Button asChild>
-					<Link to="/projects/new">
-						<Plus className="size-4" /> New project
-					</Link>
-				</Button>
-			</div>
+			<PageHeader
+				title="Projects"
+				description={`${rows.length} total`}
+				actions={
+					<Button asChild>
+						<Link to="/projects/new">
+							<Plus className="size-4" /> New project
+						</Link>
+					</Button>
+				}
+			/>
 			<Card className="py-0">
 				<Table>
 					<TableHeader>
@@ -47,11 +49,19 @@ function ProjectsList() {
 					<TableBody>
 						{rows.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={5}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No projects yet.
+								<TableCell colSpan={5} className="p-0">
+									<EmptyState
+										icon={FolderKanban}
+										title="No projects yet"
+										description="Create a project from an existing order to track delivery."
+										action={
+											<Button asChild size="sm">
+												<Link to="/projects/new">
+													<Plus className="size-4" /> New project
+												</Link>
+											</Button>
+										}
+									/>
 								</TableCell>
 							</TableRow>
 						) : (

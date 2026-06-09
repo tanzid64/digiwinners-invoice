@@ -1,6 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2, Wrench, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
@@ -74,6 +77,7 @@ function ServicesPage() {
 		if (!catName.trim()) return;
 		await createCategory({ data: { name: catName } });
 		setCatName("");
+		toast.success("Category added");
 		router.invalidate();
 	}
 
@@ -107,6 +111,7 @@ function ServicesPage() {
 				await createService({ data: payload });
 			}
 			setForm({ ...emptyService });
+			toast.success(editing ? "Service updated" : "Service added");
 			router.invalidate();
 		} finally {
 			setBusy(false);
@@ -115,12 +120,10 @@ function ServicesPage() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-2xl font-bold tracking-tight">Service Catalog</h1>
-				<p className="text-muted-foreground">
-					Reusable services and categories for quotations, orders, and invoices.
-				</p>
-			</div>
+			<PageHeader
+				title="Service Catalog"
+				description="Reusable services and categories for quotations, orders, and invoices."
+			/>
 
 			<div className="grid gap-6 lg:grid-cols-3">
 				{/* Categories */}
@@ -157,6 +160,7 @@ function ServicesPage() {
 											size="icon-sm"
 											onClick={async () => {
 												await deleteCategory({ data: c.id });
+												toast.success("Category deleted");
 												router.invalidate();
 											}}
 										>
@@ -266,11 +270,12 @@ function ServicesPage() {
 					<TableBody>
 						{services.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={5}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No services yet.
+								<TableCell colSpan={5} className="p-0">
+									<EmptyState
+										icon={Wrench}
+										title="No services yet"
+										description="Add reusable services to speed up quotations and invoices."
+									/>
 								</TableCell>
 							</TableRow>
 						) : (
@@ -295,6 +300,7 @@ function ServicesPage() {
 											size="icon-sm"
 											onClick={async () => {
 												await deleteService({ data: s.id });
+												toast.success("Service deleted");
 												router.invalidate();
 											}}
 										>

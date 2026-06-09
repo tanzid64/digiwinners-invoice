@@ -1,6 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { FileArchive, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Badge } from "#/components/ui/badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
@@ -67,6 +70,7 @@ function Documents() {
 			});
 			setName("");
 			setCustomerId("");
+			toast.success("Document added");
 			router.invalidate();
 		} finally {
 			setBusy(false);
@@ -75,14 +79,10 @@ function Documents() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-2xl font-bold tracking-tight">Documents</h1>
-				<p className="text-muted-foreground">
-					Register of contracts, customer documents and proofs. File uploads
-					(R2) land in a later phase — invoice & quotation PDFs are generated
-					from their detail pages.
-				</p>
-			</div>
+			<PageHeader
+				title="Documents"
+				description="Register of contracts, customer documents and proofs. File uploads (R2) land later — invoice & quotation PDFs generate from their detail pages."
+			/>
 
 			<Card>
 				<CardHeader>
@@ -152,11 +152,12 @@ function Documents() {
 					<TableBody>
 						{documents.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={5}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No documents registered.
+								<TableCell colSpan={5} className="p-0">
+									<EmptyState
+										icon={FileArchive}
+										title="No documents registered"
+										description="Add a contract, customer document, or payment proof above."
+									/>
 								</TableCell>
 							</TableRow>
 						) : (
@@ -176,6 +177,7 @@ function Documents() {
 											size="icon-sm"
 											onClick={async () => {
 												await deleteDocument({ data: d.id });
+												toast.success("Document deleted");
 												router.invalidate();
 											}}
 										>

@@ -1,12 +1,13 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
 	DocumentLineItems,
 	emptyMoneyState,
 	type MoneyState,
 	moneyStateToPayload,
 } from "#/components/document-line-items.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { Input } from "#/components/ui/input.tsx";
@@ -62,10 +63,13 @@ function NewOrder() {
 					items: payload.items,
 				},
 			});
+			toast.success(`Order ${created.number} created`);
 			await router.navigate({
 				to: "/orders/$orderId",
 				params: { orderId: created.id },
 			});
+		} catch {
+			toast.error("Could not create order");
 		} finally {
 			setSubmitting(false);
 		}
@@ -73,14 +77,7 @@ function NewOrder() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center gap-3">
-				<Button asChild variant="ghost" size="icon">
-					<Link to="/orders">
-						<ArrowLeft className="size-4" />
-					</Link>
-				</Button>
-				<h1 className="text-2xl font-bold tracking-tight">New order</h1>
-			</div>
+			<PageHeader title="New order" backTo="/orders" />
 			<Card>
 				<CardContent>
 					<form className="space-y-6" onSubmit={submit}>

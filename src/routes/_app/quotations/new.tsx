@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
 	type BuilderSubmit,
 	DocumentBuilderForm,
 } from "#/components/document-builder-form.tsx";
-import { Button } from "#/components/ui/button.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { listCustomers } from "#/lib/server/customers.ts";
 import { createQuotation } from "#/lib/server/quotations.ts";
@@ -38,10 +38,13 @@ function NewQuotation() {
 					...d.money,
 				},
 			});
+			toast.success(`Quotation ${created.number} created`);
 			await router.navigate({
 				to: "/quotations/$quotationId",
 				params: { quotationId: created.id },
 			});
+		} catch {
+			toast.error("Could not create quotation");
 		} finally {
 			setSubmitting(false);
 		}
@@ -49,14 +52,7 @@ function NewQuotation() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center gap-3">
-				<Button asChild variant="ghost" size="icon">
-					<Link to="/quotations">
-						<ArrowLeft className="size-4" />
-					</Link>
-				</Button>
-				<h1 className="text-2xl font-bold tracking-tight">New quotation</h1>
-			</div>
+			<PageHeader title="New quotation" backTo="/quotations" />
 			<Card>
 				<CardContent>
 					<DocumentBuilderForm

@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
+import { Trash2, Wallet } from "lucide-react";
+import { toast } from "sonner";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card } from "#/components/ui/card.tsx";
 import {
@@ -34,13 +37,10 @@ function PaymentsList() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-2xl font-bold tracking-tight">Payments</h1>
-				<p className="text-muted-foreground">
-					{rows.length} payments · {formatMoney(total)} collected. Record
-					payments from an invoice.
-				</p>
-			</div>
+			<PageHeader
+				title="Payments"
+				description={`${rows.length} payments · ${formatMoney(total)} collected. Record payments from an invoice.`}
+			/>
 			<Card className="py-0">
 				<Table>
 					<TableHeader>
@@ -57,11 +57,12 @@ function PaymentsList() {
 					<TableBody>
 						{rows.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={7}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No payments recorded.
+								<TableCell colSpan={7} className="p-0">
+									<EmptyState
+										icon={Wallet}
+										title="No payments recorded"
+										description="Open an invoice to record a received payment."
+									/>
 								</TableCell>
 							</TableRow>
 						) : (
@@ -89,6 +90,7 @@ function PaymentsList() {
 											size="icon-sm"
 											onClick={async () => {
 												await deletePayment({ data: p.id });
+												toast.success("Payment deleted");
 												router.invalidate();
 											}}
 										>

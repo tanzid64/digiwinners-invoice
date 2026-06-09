@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
@@ -77,6 +78,7 @@ function ProjectDetail() {
 					notes,
 				},
 			});
+			toast.success("Project updated");
 			router.invalidate();
 		} finally {
 			setSaving(false);
@@ -85,6 +87,7 @@ function ProjectDetail() {
 	async function remove() {
 		if (!confirm(`Delete project ${p.name}?`)) return;
 		await deleteProject({ data: p.id });
+		toast.success("Project deleted");
 		await router.navigate({ to: "/projects" });
 	}
 

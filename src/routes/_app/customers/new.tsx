@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
 	CustomerForm,
 	type CustomerFormValues,
 } from "#/components/customer-form.tsx";
-import { Button } from "#/components/ui/button.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { createCustomer } from "#/lib/server/customers.ts";
 
@@ -21,10 +21,13 @@ function NewCustomer() {
 		setSubmitting(true);
 		try {
 			const created = await createCustomer({ data: values });
+			toast.success(`Customer “${created.name}” created`);
 			await router.navigate({
 				to: "/customers/$customerId",
 				params: { customerId: created.id },
 			});
+		} catch {
+			toast.error("Could not create customer");
 		} finally {
 			setSubmitting(false);
 		}
@@ -32,14 +35,7 @@ function NewCustomer() {
 
 	return (
 		<div className="mx-auto max-w-3xl space-y-6">
-			<div className="flex items-center gap-3">
-				<Button asChild variant="ghost" size="icon">
-					<Link to="/customers">
-						<ArrowLeft className="size-4" />
-					</Link>
-				</Button>
-				<h1 className="text-2xl font-bold tracking-tight">New customer</h1>
-			</div>
+			<PageHeader title="New customer" backTo="/customers" />
 			<Card>
 				<CardContent>
 					<CustomerForm

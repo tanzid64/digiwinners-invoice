@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
 	CustomerForm,
 	type CustomerFormValues,
 } from "#/components/customer-form.tsx";
-import { Button } from "#/components/ui/button.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { getCustomer, updateCustomer } from "#/lib/server/customers.ts";
 
@@ -27,10 +27,13 @@ function EditCustomer() {
 		setSubmitting(true);
 		try {
 			await updateCustomer({ data: { ...values, id: customerId } });
+			toast.success("Customer updated");
 			await router.navigate({
 				to: "/customers/$customerId",
 				params: { customerId },
 			});
+		} catch {
+			toast.error("Could not update customer");
 		} finally {
 			setSubmitting(false);
 		}
@@ -38,14 +41,11 @@ function EditCustomer() {
 
 	return (
 		<div className="mx-auto max-w-3xl space-y-6">
-			<div className="flex items-center gap-3">
-				<Button asChild variant="ghost" size="icon">
-					<Link to="/customers/$customerId" params={{ customerId }}>
-						<ArrowLeft className="size-4" />
-					</Link>
-				</Button>
-				<h1 className="text-2xl font-bold tracking-tight">Edit customer</h1>
-			</div>
+			<PageHeader
+				title="Edit customer"
+				backTo="/customers/$customerId"
+				backParams={{ customerId }}
+			/>
 			<Card>
 				<CardContent>
 					<CustomerForm

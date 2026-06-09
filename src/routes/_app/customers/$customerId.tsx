@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
@@ -60,6 +61,7 @@ function CustomerDetail() {
 	async function handleDelete() {
 		if (!confirm(`Delete ${customer.name}? This cannot be undone.`)) return;
 		await deleteCustomer({ data: customer.id });
+		toast.success("Customer deleted");
 		await router.navigate({ to: "/customers" });
 	}
 
@@ -292,6 +294,7 @@ function ContactsCard({
 			setEmail("");
 			setPhone("");
 			setAdding(false);
+			toast.success("Contact added");
 			onChange();
 		} finally {
 			setBusy(false);
@@ -300,6 +303,7 @@ function ContactsCard({
 
 	async function remove(id: string) {
 		await deleteContact({ data: id });
+		toast.success("Contact removed");
 		onChange();
 	}
 

@@ -6,6 +6,8 @@ import {
 	RefreshCw,
 	Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { fmtDate } from "#/lib/format.ts";
@@ -36,32 +38,35 @@ function Notifications() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
-					<p className="text-muted-foreground">{unread} unread</p>
-				</div>
-				<div className="flex gap-2">
-					<Button
-						variant="outline"
-						onClick={async () => {
-							await generateNotifications();
-							router.invalidate();
-						}}
-					>
-						<RefreshCw className="size-4" /> Scan invoices
-					</Button>
-					<Button
-						variant="outline"
-						onClick={async () => {
-							await markAllRead();
-							router.invalidate();
-						}}
-					>
-						<CheckCheck className="size-4" /> Mark all read
-					</Button>
-				</div>
-			</div>
+			<PageHeader
+				title="Notifications"
+				description={`${unread} unread`}
+				actions={
+					<>
+						<Button
+							variant="outline"
+							onClick={async () => {
+								const r = await generateNotifications();
+								toast.success(
+									`Scan complete · ${r.overdue} overdue, ${r.due} due soon`,
+								);
+								router.invalidate();
+							}}
+						>
+							<RefreshCw className="size-4" /> Scan invoices
+						</Button>
+						<Button
+							variant="outline"
+							onClick={async () => {
+								await markAllRead();
+								router.invalidate();
+							}}
+						>
+							<CheckCheck className="size-4" /> Mark all read
+						</Button>
+					</>
+				}
+			/>
 
 			<Card>
 				<CardContent className="p-0">

@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card } from "#/components/ui/card.tsx";
@@ -24,17 +26,17 @@ function QuotationsList() {
 	const rows = Route.useLoaderData();
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between gap-3">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Quotations</h1>
-					<p className="text-muted-foreground">{rows.length} total</p>
-				</div>
-				<Button asChild>
-					<Link to="/quotations/new">
-						<Plus className="size-4" /> New quotation
-					</Link>
-				</Button>
-			</div>
+			<PageHeader
+				title="Quotations"
+				description={`${rows.length} total`}
+				actions={
+					<Button asChild>
+						<Link to="/quotations/new">
+							<Plus className="size-4" /> New quotation
+						</Link>
+					</Button>
+				}
+			/>
 			<Card className="py-0">
 				<Table>
 					<TableHeader>
@@ -49,11 +51,19 @@ function QuotationsList() {
 					<TableBody>
 						{rows.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={5}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No quotations yet.
+								<TableCell colSpan={5} className="p-0">
+									<EmptyState
+										icon={FileText}
+										title="No quotations yet"
+										description="Create a quotation to send pricing to a customer."
+										action={
+											<Button asChild size="sm">
+												<Link to="/quotations/new">
+													<Plus className="size-4" /> New quotation
+												</Link>
+											</Button>
+										}
+									/>
 								</TableCell>
 							</TableRow>
 						) : (

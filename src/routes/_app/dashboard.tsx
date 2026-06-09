@@ -9,6 +9,7 @@ import {
 	Users,
 	Wallet,
 } from "lucide-react";
+import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import {
 	Card,
@@ -38,10 +39,10 @@ function Dashboard() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-				<p className="text-muted-foreground">Business overview at a glance.</p>
-			</div>
+			<PageHeader
+				title="Dashboard"
+				description="Business overview at a glance."
+			/>
 
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 				<Kpi label="Total Customers" value={kpis.totalCustomers} icon={Users} />

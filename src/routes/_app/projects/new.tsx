@@ -1,6 +1,7 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { Input } from "#/components/ui/input.tsx";
@@ -47,10 +48,13 @@ function NewProject() {
 					endDate: end ? new Date(end).getTime() : null,
 				},
 			});
+			toast.success("Project created");
 			await router.navigate({
 				to: "/projects/$projectId",
 				params: { projectId: created.id },
 			});
+		} catch {
+			toast.error("Could not create project");
 		} finally {
 			setBusy(false);
 		}
@@ -58,14 +62,7 @@ function NewProject() {
 
 	return (
 		<div className="mx-auto max-w-2xl space-y-6">
-			<div className="flex items-center gap-3">
-				<Button asChild variant="ghost" size="icon">
-					<Link to="/projects">
-						<ArrowLeft className="size-4" />
-					</Link>
-				</Button>
-				<h1 className="text-2xl font-bold tracking-tight">New project</h1>
-			</div>
+			<PageHeader title="New project" backTo="/projects" />
 			<Card>
 				<CardContent>
 					<form className="space-y-5" onSubmit={submit}>

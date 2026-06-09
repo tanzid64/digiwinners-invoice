@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
 	type BuilderSubmit,
 	DocumentBuilderForm,
 } from "#/components/document-builder-form.tsx";
-import { Button } from "#/components/ui/button.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
 import { listCustomers } from "#/lib/server/customers.ts";
 import { createInvoice } from "#/lib/server/invoices.ts";
@@ -39,10 +39,13 @@ function NewInvoice() {
 					...d.money,
 				},
 			});
+			toast.success(`Invoice ${created.number} created`);
 			await router.navigate({
 				to: "/invoices/$invoiceId",
 				params: { invoiceId: created.id },
 			});
+		} catch {
+			toast.error("Could not create invoice");
 		} finally {
 			setSubmitting(false);
 		}
@@ -50,14 +53,7 @@ function NewInvoice() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center gap-3">
-				<Button asChild variant="ghost" size="icon">
-					<Link to="/invoices">
-						<ArrowLeft className="size-4" />
-					</Link>
-				</Button>
-				<h1 className="text-2xl font-bold tracking-tight">New invoice</h1>
-			</div>
+			<PageHeader title="New invoice" backTo="/invoices" />
 			<Card>
 				<CardContent>
 					<DocumentBuilderForm

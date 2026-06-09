@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import { useMemo, useState } from "react";
+import { EmptyState } from "#/components/empty-state.tsx";
+import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card } from "#/components/ui/card.tsx";
@@ -48,17 +50,17 @@ function InvoicesList() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between gap-3">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
-					<p className="text-muted-foreground">{rows.length} total</p>
-				</div>
-				<Button asChild>
-					<Link to="/invoices/new">
-						<Plus className="size-4" /> New invoice
-					</Link>
-				</Button>
-			</div>
+			<PageHeader
+				title="Invoices"
+				description={`${rows.length} total`}
+				actions={
+					<Button asChild>
+						<Link to="/invoices/new">
+							<Plus className="size-4" /> New invoice
+						</Link>
+					</Button>
+				}
+			/>
 
 			<Select
 				value={status}
@@ -91,11 +93,19 @@ function InvoicesList() {
 					<TableBody>
 						{filtered.length === 0 ? (
 							<TableRow>
-								<TableCell
-									colSpan={6}
-									className="text-muted-foreground py-10 text-center"
-								>
-									No invoices.
+								<TableCell colSpan={6} className="p-0">
+									<EmptyState
+										icon={Receipt}
+										title="No invoices"
+										description="Create an invoice or generate one from an order."
+										action={
+											<Button asChild size="sm">
+												<Link to="/invoices/new">
+													<Plus className="size-4" /> New invoice
+												</Link>
+											</Button>
+										}
+									/>
 								</TableCell>
 							</TableRow>
 						) : (

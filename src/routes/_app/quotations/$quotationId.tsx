@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRightLeft, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { DocItemsTable } from "#/components/doc-items-table.tsx";
 import { PdfButton } from "#/components/pdf-button.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
@@ -66,11 +67,13 @@ function QuotationDetail() {
 
 	async function convert() {
 		const { orderId } = await convertQuotationToOrder({ data: q.id });
+		toast.success("Converted to order");
 		await router.navigate({ to: "/orders/$orderId", params: { orderId } });
 	}
 	async function remove() {
 		if (!confirm(`Delete ${q.number}?`)) return;
 		await deleteQuotation({ data: q.id });
+		toast.success("Quotation deleted");
 		await router.navigate({ to: "/quotations" });
 	}
 
@@ -95,6 +98,7 @@ function QuotationDetail() {
 							await setQuotationStatus({
 								data: { id: q.id, status: v as (typeof STATUSES)[number] },
 							});
+							toast.success(`Status set to ${v}`);
 							router.invalidate();
 						}}
 					>
