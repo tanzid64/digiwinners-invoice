@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, FilePlus2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ProgressDonut } from "#/components/charts.tsx";
 import { DocItemsTable } from "#/components/doc-items-table.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
@@ -49,7 +50,7 @@ function OrderDetail() {
 	const data = Route.useLoaderData();
 	const router = useRouter();
 	if (!data) return <p>Order not found.</p>;
-	const { order: o, items, customer, invoices } = data;
+	const { order: o, items, customer, invoices, project } = data;
 
 	const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
 
@@ -132,6 +133,25 @@ function OrderDetail() {
 				</Card>
 
 				<div className="space-y-6">
+					{project ? (
+						<Card>
+							<CardHeader>
+								<CardTitle>Project Progress</CardTitle>
+							</CardHeader>
+							<CardContent className="flex flex-col items-center gap-3">
+								<ProgressDonut value={project.progress} />
+								<Link
+									to="/projects/$projectId"
+									params={{ projectId: project.id }}
+									className="text-sm font-medium hover:underline"
+								>
+									{project.name}
+								</Link>
+								<StatusBadge status={project.status} />
+							</CardContent>
+						</Card>
+					) : null}
+
 					<Card>
 						<CardHeader>
 							<CardTitle>Summary</CardTitle>

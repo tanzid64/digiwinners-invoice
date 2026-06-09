@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { StatusBadge } from "#/components/status-badge.tsx";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
 	Card,
@@ -19,6 +20,13 @@ import {
 	TableHeader,
 	TableRow,
 } from "#/components/ui/table.tsx";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "#/components/ui/tabs.tsx";
+import { fmtDate } from "#/lib/format.ts";
 import { formatMoney } from "#/lib/money.ts";
 import {
 	addContact,
@@ -31,15 +39,6 @@ export const Route = createFileRoute("/_app/customers/$customerId")({
 	loader: ({ params }) => getCustomer({ data: params.customerId }),
 	component: CustomerDetail,
 });
-
-function fmtDate(d: Date | string | number | null) {
-	if (!d) return "—";
-	return new Date(d).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	});
-}
 
 function CustomerDetail() {
 	const data = Route.useLoaderData();
@@ -57,6 +56,13 @@ function CustomerDetail() {
 	}
 
 	const { customer, contacts, timeline, orders, invoices } = data;
+	const outstanding = invoices.reduce((s, i) => s + i.dueAmount, 0);
+	const initials = (customer.companyName || customer.name)
+		.split(" ")
+		.map((w) => w[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase();
 
 	async function handleDelete() {
 		if (!confirm(`Delete ${customer.name}? This cannot be undone.`)) return;
@@ -67,138 +73,166 @@ function CustomerDetail() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div className="flex items-center gap-3">
-					<Button asChild variant="ghost" size="icon">
-						<Link to="/customers">
-							<ArrowLeft className="size-4" />
-						</Link>
-					</Button>
-					<div>
-						<div className="flex items-center gap-2">
+			<div className="flex items-center gap-2">
+				<Button asChild variant="ghost" size="icon">
+					<Link to="/customers">
+						<ArrowLeft className="size-4" />
+					</Link>
+				</Button>
+				<span className="text-muted-foreground text-sm">Customers</span>
+			</div>
+
+			{/* Identity header */}
+			<Card>
+				<CardContent className="flex flex-wrap items-center gap-5 p-5">
+					<Avatar className="size-14 rounded-xl">
+						<AvatarFallback className="bg-primary/10 text-primary rounded-xl text-lg font-semibold">
+							{initials}
+						</AvatarFallback>
+					</Avatar>
+					<div className="min-w-0">
+						<div className="flex flex-wrap items-center gap-2">
 							<h1 className="text-2xl font-bold tracking-tight">
 								{customer.name}
 							</h1>
 							<StatusBadge status={customer.status} />
 						</div>
-						<p className="text-muted-foreground capitalize">
-							{customer.type}
-							{customer.companyName ? ` · ${customer.companyName}` : ""}
+						<p className="text-muted-foreground text-sm">
+							{[customer.companyName, customer.email, customer.phone]
+								.filter(Boolean)
+								.join(" · ") || customer.type}
 						</p>
 					</div>
-				</div>
-				<div className="flex gap-2">
-					<Button asChild variant="outline">
-						<Link
-							to="/customers/$customerId/edit"
-							params={{ customerId: customer.id }}
-						>
-							<Pencil className="size-4" /> Edit
-						</Link>
-					</Button>
-					<Button variant="destructive" onClick={handleDelete}>
-						<Trash2 className="size-4" /> Delete
-					</Button>
-				</div>
-			</div>
+					<div className="ml-auto flex items-center gap-4">
+						<div className="text-right">
+							<p className="text-muted-foreground text-xs uppercase">
+								Outstanding Due
+							</p>
+							<p
+								className={`text-xl font-bold tabular-nums ${outstanding > 0 ? "text-amber-600" : ""}`}
+							>
+								{formatMoney(outstanding)}
+							</p>
+						</div>
+						<div className="flex gap-2">
+							<Button asChild variant="outline">
+								<Link
+									to="/customers/$customerId/edit"
+									params={{ customerId: customer.id }}
+								>
+									<Pencil className="size-4" /> Edit
+								</Link>
+							</Button>
+							<Button variant="destructive" size="icon" onClick={handleDelete}>
+								<Trash2 className="size-4" />
+							</Button>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 
-			<div className="grid gap-6 lg:grid-cols-3">
-				<div className="space-y-6 lg:col-span-2">
-					<Card>
-						<CardHeader>
-							<CardTitle>Details</CardTitle>
-						</CardHeader>
-						<CardContent className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-							<Field label="Email" value={customer.email} />
-							<Field label="Phone" value={customer.phone} />
-							<Field label="Website" value={customer.website} />
-							<Field label="Tax ID" value={customer.taxId} />
-							<Field
-								label="Address"
-								value={customer.address}
-								className="sm:col-span-2"
-							/>
-							<Field
-								label="Notes"
-								value={customer.notes}
-								className="sm:col-span-2"
-							/>
-						</CardContent>
+			<Tabs defaultValue="overview">
+				<TabsList>
+					<TabsTrigger value="overview">Overview</TabsTrigger>
+					<TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
+					<TabsTrigger value="invoices">
+						Invoices ({invoices.length})
+					</TabsTrigger>
+					<TabsTrigger value="activity">Activity</TabsTrigger>
+				</TabsList>
+
+				<TabsContent value="overview" className="mt-4">
+					<div className="grid gap-6 lg:grid-cols-2">
+						<Card>
+							<CardHeader>
+								<CardTitle>Company Information</CardTitle>
+							</CardHeader>
+							<CardContent className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+								<Field label="Email" value={customer.email} />
+								<Field label="Phone" value={customer.phone} />
+								<Field label="Website" value={customer.website} />
+								<Field label="Tax ID" value={customer.taxId} />
+								<Field
+									label="Address"
+									value={customer.address}
+									className="sm:col-span-2"
+								/>
+								<Field
+									label="Notes"
+									value={customer.notes}
+									className="sm:col-span-2"
+								/>
+							</CardContent>
+						</Card>
+						<ContactsCard
+							customerId={customer.id}
+							contacts={contacts}
+							onChange={() => router.invalidate()}
+						/>
+					</div>
+				</TabsContent>
+
+				<TabsContent value="orders" className="mt-4">
+					<Card className="py-0">
+						<MiniTable
+							rows={orders.map((o) => ({
+								id: o.id,
+								a: o.number,
+								b: <StatusBadge status={o.status} />,
+								c: formatMoney(o.value, o.currency),
+							}))}
+							cols={["Number", "Status", "Value"]}
+							empty="No orders yet."
+						/>
 					</Card>
+				</TabsContent>
 
-					<ContactsCard
-						customerId={customer.id}
-						contacts={contacts}
-						onChange={() => router.invalidate()}
-					/>
-
-					<Card>
-						<CardHeader>
-							<CardTitle>Orders ({orders.length})</CardTitle>
-						</CardHeader>
-						<CardContent className="px-0">
-							<MiniTable
-								rows={orders.map((o) => ({
-									id: o.id,
-									a: o.number,
-									b: <StatusBadge status={o.status} />,
-									c: formatMoney(o.value, o.currency),
-								}))}
-								cols={["Number", "Status", "Value"]}
-								empty="No orders yet."
-							/>
-						</CardContent>
+				<TabsContent value="invoices" className="mt-4">
+					<Card className="py-0">
+						<MiniTable
+							rows={invoices.map((i) => ({
+								id: i.id,
+								a: i.number,
+								b: <StatusBadge status={i.status} />,
+								c: formatMoney(i.dueAmount, i.currency),
+							}))}
+							cols={["Number", "Status", "Due"]}
+							empty="No invoices yet."
+						/>
 					</Card>
+				</TabsContent>
 
+				<TabsContent value="activity" className="mt-4">
 					<Card>
-						<CardHeader>
-							<CardTitle>Invoices ({invoices.length})</CardTitle>
-						</CardHeader>
-						<CardContent className="px-0">
-							<MiniTable
-								rows={invoices.map((i) => ({
-									id: i.id,
-									a: i.number,
-									b: <StatusBadge status={i.status} />,
-									c: formatMoney(i.dueAmount, i.currency),
-								}))}
-								cols={["Number", "Status", "Due"]}
-								empty="No invoices yet."
-							/>
-						</CardContent>
-					</Card>
-				</div>
-
-				<Card>
-					<CardHeader>
-						<CardTitle>Activity</CardTitle>
-					</CardHeader>
-					<CardContent>
-						{timeline.length === 0 ? (
-							<p className="text-muted-foreground text-sm">No activity yet.</p>
-						) : (
-							<ol className="space-y-4">
-								{timeline.map((t) => (
-									<li key={t.id} className="flex gap-3">
-										<div className="bg-primary mt-1.5 size-2 shrink-0 rounded-full" />
-										<div className="min-w-0">
-											<p className="text-sm font-medium">{t.title}</p>
-											{t.description ? (
-												<p className="text-muted-foreground text-sm">
-													{t.description}
+						<CardContent className="p-5">
+							{timeline.length === 0 ? (
+								<p className="text-muted-foreground text-sm">
+									No activity yet.
+								</p>
+							) : (
+								<ol className="space-y-4">
+									{timeline.map((t) => (
+										<li key={t.id} className="flex gap-3">
+											<div className="bg-primary mt-1.5 size-2 shrink-0 rounded-full" />
+											<div className="min-w-0">
+												<p className="text-sm font-medium">{t.title}</p>
+												{t.description ? (
+													<p className="text-muted-foreground text-sm">
+														{t.description}
+													</p>
+												) : null}
+												<p className="text-muted-foreground text-xs">
+													{fmtDate(t.createdAt)}
 												</p>
-											) : null}
-											<p className="text-muted-foreground text-xs">
-												{fmtDate(t.createdAt)}
-											</p>
-										</div>
-									</li>
-								))}
-							</ol>
-						)}
-					</CardContent>
-				</Card>
-			</div>
+											</div>
+										</li>
+									))}
+								</ol>
+							)}
+						</CardContent>
+					</Card>
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
 }

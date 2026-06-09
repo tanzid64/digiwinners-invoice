@@ -9,6 +9,8 @@ import {
 	Users,
 	Wallet,
 } from "lucide-react";
+import { RevenueBars } from "#/components/charts.tsx";
+import { KpiCard } from "#/components/kpi-card.tsx";
 import { PageHeader } from "#/components/page-header.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import {
@@ -26,6 +28,13 @@ export const Route = createFileRoute("/_app/dashboard")({
 	component: Dashboard,
 });
 
+function monthLabel(ym: string) {
+	const [y, m] = ym.split("-").map(Number);
+	return new Date(y, (m ?? 1) - 1, 1).toLocaleDateString("en-US", {
+		month: "short",
+	});
+}
+
 function Dashboard() {
 	const {
 		kpis,
@@ -35,7 +44,9 @@ function Dashboard() {
 		monthlyRevenue,
 	} = Route.useLoaderData();
 
-	const maxMonth = Math.max(1, ...monthlyRevenue.map((m) => m.total));
+	const bars = [...monthlyRevenue]
+		.reverse()
+		.map((m) => ({ label: monthLabel(m.month), value: m.total }));
 
 	return (
 		<div className="space-y-6">
@@ -44,81 +55,61 @@ function Dashboard() {
 				description="Business overview at a glance."
 			/>
 
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				<Kpi label="Total Customers" value={kpis.totalCustomers} icon={Users} />
-				<Kpi label="Total Orders" value={kpis.totalOrders} icon={Package} />
-				<Kpi
-					label="Active Projects"
-					value={kpis.activeProjects}
-					icon={FolderKanban}
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				<KpiCard
+					label="Total Customers"
+					value={kpis.totalCustomers}
+					icon={Users}
 				/>
-				<Kpi
+				<KpiCard label="Total Orders" value={kpis.totalOrders} icon={Package} />
+				<KpiCard
 					label="Total Invoiced"
 					value={formatMoney(kpis.totalInvoiced)}
 					icon={Receipt}
 				/>
-				<Kpi
+				<KpiCard
 					label="Total Collected"
 					value={formatMoney(kpis.totalCollected)}
 					icon={CircleDollarSign}
-					accent="success"
+					tone="success"
 				/>
-				<Kpi
-					label="Outstanding"
+				<KpiCard
+					label="Outstanding Due"
 					value={formatMoney(kpis.outstanding)}
 					icon={Wallet}
-					accent="warning"
+					tone="warning"
 				/>
-				<Kpi
+				<KpiCard
 					label="Overdue Invoices"
 					value={kpis.overdueCount}
 					icon={AlertTriangle}
-					accent={kpis.overdueCount > 0 ? "danger" : undefined}
+					tone={kpis.overdueCount > 0 ? "danger" : "primary"}
 				/>
-				<Kpi
-					label="Monthly Revenue"
+				<KpiCard
+					label="Active Projects"
+					value={kpis.activeProjects}
+					icon={FolderKanban}
+					tone="info"
+				/>
+				<KpiCard
+					label="This Month Revenue"
 					value={formatMoney(kpis.monthlyRevenue)}
 					icon={TrendingUp}
-				/>
-				<Kpi
-					label="Monthly Collection"
-					value={formatMoney(kpis.monthlyCollection)}
-					icon={CircleDollarSign}
 				/>
 			</div>
 
 			<div className="grid gap-6 lg:grid-cols-3">
 				<Card className="lg:col-span-2">
 					<CardHeader>
-						<CardTitle>Revenue (last 6 months)</CardTitle>
+						<CardTitle>Monthly Revenue</CardTitle>
 					</CardHeader>
 					<CardContent>
-						{monthlyRevenue.length === 0 ? (
+						{bars.length === 0 ? (
 							<p className="text-muted-foreground text-sm">
 								No invoiced revenue yet.
 							</p>
 						) : (
-							<div className="flex items-end gap-3 pt-4">
-								{[...monthlyRevenue].reverse().map((m) => (
-									<div
-										key={m.month}
-										className="flex flex-1 flex-col items-center gap-2"
-									>
-										<div className="flex h-40 w-full items-end">
-											<div
-												className="bg-primary w-full rounded-t"
-												style={{
-													height: `${Math.max(4, (m.total / maxMonth) * 100)}%`,
-												}}
-												title={formatMoney(m.total)}
-											/>
-										</div>
-										<span className="text-muted-foreground text-xs">
-											{m.month}
-										</span>
-									</div>
-								))}
-							</div>
+							<RevenueBars data={bars} />
 						)}
 					</CardContent>
 				</Card>
@@ -154,37 +145,32 @@ function Dashboard() {
 					<CardHeader>
 						<CardTitle>Recent Payments</CardTitle>
 					</CardHeader>
-					<CardContent className="space-y-3">
+					<CardContent className="space-y-1">
 						{recentPayments.length === 0 ? (
 							<p className="text-muted-foreground text-sm">No payments yet.</p>
 						) : (
 							recentPayments.map((p) => (
-								<div
+								<Link
 									key={p.id}
-									className="flex items-center justify-between gap-3 text-sm"
+									to="/invoices/$invoiceId"
+									params={{ invoiceId: p.invoiceId }}
+									className="hover:bg-muted/50 -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-2 text-sm"
 								>
 									<div className="min-w-0">
-										<Link
-											to="/invoices/$invoiceId"
-											params={{ invoiceId: p.invoiceId }}
-											className="font-medium hover:underline"
-										>
-											{p.invoiceNumber}
-										</Link>
-										<span className="text-muted-foreground">
-											{" "}
-											· {p.customerName}
-										</span>
+										<p className="font-medium">{p.invoiceNumber}</p>
+										<p className="text-muted-foreground truncate text-xs">
+											{p.customerName}
+										</p>
 									</div>
-									<div className="flex items-center gap-3">
-										<span className="tabular-nums font-medium">
+									<div className="text-right">
+										<p className="font-medium tabular-nums">
 											{formatMoney(p.amount)}
-										</span>
-										<span className="text-muted-foreground text-xs">
+										</p>
+										<p className="text-muted-foreground text-xs">
 											{fmtDate(p.paymentDate)}
-										</span>
+										</p>
 									</div>
-								</div>
+								</Link>
 							))
 						)}
 					</CardContent>
@@ -194,27 +180,22 @@ function Dashboard() {
 					<CardHeader>
 						<CardTitle>Recent Orders</CardTitle>
 					</CardHeader>
-					<CardContent className="space-y-3">
+					<CardContent className="space-y-1">
 						{recentOrders.length === 0 ? (
 							<p className="text-muted-foreground text-sm">No orders yet.</p>
 						) : (
 							recentOrders.map((o) => (
-								<div
+								<Link
 									key={o.id}
-									className="flex items-center justify-between gap-3 text-sm"
+									to="/orders/$orderId"
+									params={{ orderId: o.id }}
+									className="hover:bg-muted/50 -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-2 text-sm"
 								>
 									<div className="min-w-0">
-										<Link
-											to="/orders/$orderId"
-											params={{ orderId: o.id }}
-											className="font-medium hover:underline"
-										>
-											{o.number}
-										</Link>
-										<span className="text-muted-foreground">
-											{" "}
-											· {o.customerName}
-										</span>
+										<p className="font-medium">{o.number}</p>
+										<p className="text-muted-foreground truncate text-xs">
+											{o.customerName}
+										</p>
 									</div>
 									<div className="flex items-center gap-3">
 										<StatusBadge status={o.status} />
@@ -222,46 +203,12 @@ function Dashboard() {
 											{formatMoney(o.value, o.currency)}
 										</span>
 									</div>
-								</div>
+								</Link>
 							))
 						)}
 					</CardContent>
 				</Card>
 			</div>
 		</div>
-	);
-}
-
-function Kpi({
-	label,
-	value,
-	icon: Icon,
-	accent,
-}: {
-	label: string;
-	value: string | number;
-	icon: React.ComponentType<{ className?: string }>;
-	accent?: "success" | "warning" | "danger";
-}) {
-	const accentClass =
-		accent === "success"
-			? "text-emerald-600"
-			: accent === "warning"
-				? "text-amber-600"
-				: accent === "danger"
-					? "text-destructive"
-					: "text-primary";
-	return (
-		<Card>
-			<CardContent className="flex items-center justify-between gap-3 py-5">
-				<div className="min-w-0">
-					<p className="text-muted-foreground text-sm">{label}</p>
-					<p className={`mt-1 text-2xl font-bold tabular-nums ${accentClass}`}>
-						{value}
-					</p>
-				</div>
-				<Icon className={`size-8 shrink-0 opacity-30 ${accentClass}`} />
-			</CardContent>
-		</Card>
 	);
 }

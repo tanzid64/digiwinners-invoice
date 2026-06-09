@@ -1,13 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Download, Printer } from "lucide-react";
+import {
+	CircleDollarSign,
+	Download,
+	Percent,
+	Printer,
+	Receipt,
+	Wallet,
+} from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+import { CategoryDonut, RevenueArea } from "#/components/charts.tsx";
+import { KpiCard } from "#/components/kpi-card.tsx";
 import { StatusBadge } from "#/components/status-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardHeader,
 	CardTitle,
 } from "#/components/ui/card.tsx";
@@ -53,12 +61,32 @@ function toInput(ms: number) {
 	return new Date(ms).toISOString().slice(0, 10);
 }
 
+function monthLabel(ym: string) {
+	const [y, m] = ym.split("-").map(Number);
+	return new Date(y, (m ?? 1) - 1, 1).toLocaleDateString("en-US", {
+		month: "short",
+		year: "2-digit",
+	});
+}
+
 function Reports() {
 	const data = Route.useLoaderData();
 	const navigate = useNavigate();
 	const [tab, setTab] = useState<(typeof TABS)[number]>("Revenue");
 	const [from, setFrom] = useState(toInput(data.range.from));
 	const [to, setTo] = useState(toInput(data.range.to));
+
+	const collectionRate =
+		data.totals.revenue > 0
+			? Math.round((data.totals.collection / data.totals.revenue) * 100)
+			: 0;
+	const areaData = data.monthly.map((m) => ({
+		label: monthLabel(m.month),
+		value: m.total,
+	}));
+	const topCustomers = data.customerWise
+		.slice(0, 5)
+		.map((c) => ({ name: c.name, value: c.invoiced }));
 
 	function applyRange() {
 		navigate({
@@ -110,19 +138,85 @@ function Reports() {
 			</div>
 
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				<Summary label="Revenue (invoiced)" value={data.totals.revenue} />
-				<Summary label="Collected" value={data.totals.collection} />
-				<Summary
-					label="Outstanding (current)"
-					value={data.totals.outstanding}
+				<KpiCard
+					label="Total Invoiced"
+					value={formatMoney(data.totals.revenue)}
+					icon={Receipt}
 				/>
+				<KpiCard
+					label="Collected"
+					value={formatMoney(data.totals.collection)}
+					icon={CircleDollarSign}
+					tone="success"
+				/>
+				<KpiCard
+					label="Outstanding"
+					value={formatMoney(data.totals.outstanding)}
+					icon={Wallet}
+					tone="warning"
+				/>
+				<KpiCard
+					label="Collection Rate"
+					value={`${collectionRate}%`}
+					icon={Percent}
+					tone="info"
+					sub={
+						<span className="text-muted-foreground">
+							{data.totals.overdueCount} overdue
+						</span>
+					}
+				/>
+			</div>
+
+			<div className="grid gap-6 lg:grid-cols-3">
+				<Card className="lg:col-span-2">
+					<CardHeader>
+						<CardTitle>Revenue Overview</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{areaData.length === 0 ? (
+							<p className="text-muted-foreground text-sm">
+								No invoiced revenue in range.
+							</p>
+						) : (
+							<RevenueArea data={areaData} />
+						)}
+					</CardContent>
+				</Card>
 				<Card>
 					<CardHeader>
-						<CardDescription>Overdue invoices</CardDescription>
-						<CardTitle className="text-2xl">
-							{data.totals.overdueCount}
-						</CardTitle>
+						<CardTitle>Top Customers</CardTitle>
 					</CardHeader>
+					<CardContent>
+						{topCustomers.length === 0 ? (
+							<p className="text-muted-foreground text-sm">No data in range.</p>
+						) : (
+							<>
+								<CategoryDonut data={topCustomers} />
+								<ul className="mt-4 space-y-1.5">
+									{topCustomers.map((c, i) => (
+										<li
+											key={c.name}
+											className="flex items-center justify-between gap-2 text-sm"
+										>
+											<span className="flex items-center gap-2 truncate">
+												<span
+													className="size-2.5 rounded-full"
+													style={{
+														background: `var(--chart-${(i % 5) + 1})`,
+													}}
+												/>
+												<span className="truncate">{c.name}</span>
+											</span>
+											<span className="tabular-nums">
+												{formatMoney(c.value)}
+											</span>
+										</li>
+									))}
+								</ul>
+							</>
+						)}
+					</CardContent>
 				</Card>
 			</div>
 
@@ -286,17 +380,6 @@ function Reports() {
 				</CardContent>
 			</Card>
 		</div>
-	);
-}
-
-function Summary({ label, value }: { label: string; value: number }) {
-	return (
-		<Card>
-			<CardHeader>
-				<CardDescription>{label}</CardDescription>
-				<CardTitle className="text-2xl">{formatMoney(value)}</CardTitle>
-			</CardHeader>
-		</Card>
 	);
 }
 
