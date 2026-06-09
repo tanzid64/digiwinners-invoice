@@ -3,149 +3,327 @@ import {
 	Link,
 	Outlet,
 	useRouter,
+	useRouterState,
 } from "@tanstack/react-router";
 import {
 	BarChart3,
 	Bell,
+	ChevronsUpDown,
 	FileArchive,
 	FileText,
 	FolderKanban,
 	LayoutDashboard,
 	LogOut,
-	Menu,
+	Monitor,
+	Moon,
 	Package,
 	Receipt,
 	Search,
+	Sun,
 	Users,
 	Wallet,
 	Wrench,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar.tsx";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
+} from "#/components/ui/breadcrumb.tsx";
 import { Button } from "#/components/ui/button.tsx";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu.tsx";
 import { Input } from "#/components/ui/input.tsx";
+import { Separator } from "#/components/ui/separator.tsx";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarInset,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarProvider,
+	SidebarRail,
+	SidebarTrigger,
+} from "#/components/ui/sidebar.tsx";
 import { signOut } from "#/lib/auth-client.ts";
-import { cn } from "#/lib/utils.ts";
 
 export const Route = createFileRoute("/_app")({
 	component: AppLayout,
 });
 
-const NAV = [
-	{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-	{ to: "/customers", label: "Customers", icon: Users },
-	{ to: "/services", label: "Services", icon: Wrench },
-	{ to: "/quotations", label: "Quotations", icon: FileText },
-	{ to: "/orders", label: "Orders", icon: Package },
-	{ to: "/projects", label: "Projects", icon: FolderKanban },
-	{ to: "/invoices", label: "Invoices", icon: Receipt },
-	{ to: "/payments", label: "Payments", icon: Wallet },
-	{ to: "/reports", label: "Reports", icon: BarChart3 },
-	{ to: "/documents", label: "Documents", icon: FileArchive },
+const NAV_GROUPS = [
+	{
+		label: "Overview",
+		items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+	},
+	{
+		label: "Sales",
+		items: [
+			{ to: "/customers", label: "Customers", icon: Users },
+			{ to: "/services", label: "Services", icon: Wrench },
+			{ to: "/quotations", label: "Quotations", icon: FileText },
+			{ to: "/orders", label: "Orders", icon: Package },
+			{ to: "/projects", label: "Projects", icon: FolderKanban },
+		],
+	},
+	{
+		label: "Billing",
+		items: [
+			{ to: "/invoices", label: "Invoices", icon: Receipt },
+			{ to: "/payments", label: "Payments", icon: Wallet },
+		],
+	},
+	{
+		label: "Insights",
+		items: [
+			{ to: "/reports", label: "Reports", icon: BarChart3 },
+			{ to: "/documents", label: "Documents", icon: FileArchive },
+		],
+	},
 ] as const;
 
+const TITLES: Record<string, string> = {
+	dashboard: "Dashboard",
+	customers: "Customers",
+	services: "Services",
+	quotations: "Quotations",
+	orders: "Orders",
+	projects: "Projects",
+	invoices: "Invoices",
+	payments: "Payments",
+	reports: "Reports",
+	documents: "Documents",
+	notifications: "Notifications",
+	search: "Search",
+	new: "New",
+	edit: "Edit",
+};
+
 function AppLayout() {
+	const pathname = useRouterState({
+		select: (s) => s.location.pathname,
+	});
+
+	return (
+		<SidebarProvider>
+			<AppSidebar pathname={pathname} />
+			<SidebarInset>
+				<AppHeader pathname={pathname} />
+				<main className="flex-1 p-4 md:p-6 lg:p-8">
+					<Outlet />
+				</main>
+			</SidebarInset>
+		</SidebarProvider>
+	);
+}
+
+function AppSidebar({ pathname }: { pathname: string }) {
+	const ctx = Route.useRouteContext() as {
+		session?: { user?: { name?: string; email?: string } };
+	};
+	const user = ctx.session?.user;
 	const router = useRouter();
-	const [open, setOpen] = useState(false);
-	const [search, setSearch] = useState("");
 
 	async function handleSignOut() {
 		await signOut();
 		await router.navigate({ to: "/login" });
 	}
 
+	const initials = (user?.name ?? user?.email ?? "U")
+		.split(" ")
+		.map((s) => s[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase();
+
 	return (
-		<div className="flex min-h-svh">
-			{/* Sidebar */}
-			<aside
-				className={cn(
-					"bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r transition-transform md:translate-x-0",
-					open ? "translate-x-0" : "-translate-x-full",
-				)}
-			>
-				<div className="flex h-16 items-center gap-2 border-b px-5">
-					<img
-						src="/logo/digiwinners.png"
-						alt="DigiWinners"
-						className="h-8 w-auto"
-					/>
-				</div>
-				<nav className="flex-1 space-y-1 overflow-y-auto p-3">
-					{NAV.map((item) => (
-						<Link
-							key={item.to}
-							to={item.to}
-							onClick={() => setOpen(false)}
-							className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-							activeProps={{
-								className:
-									"!bg-sidebar-primary !text-sidebar-primary-foreground hover:!bg-sidebar-primary",
-							}}
-						>
-							<item.icon className="size-4 shrink-0" />
-							{item.label}
-						</Link>
-					))}
-				</nav>
-				<div className="border-t p-3">
-					<Button
-						variant="ghost"
-						className="w-full justify-start gap-3 text-sidebar-foreground/80"
-						onClick={handleSignOut}
-					>
-						<LogOut className="size-4" />
-						Sign out
-					</Button>
-				</div>
-			</aside>
-
-			{/* Mobile overlay */}
-			{open && (
-				<button
-					type="button"
-					aria-label="Close menu"
-					className="fixed inset-0 z-30 bg-black/40 md:hidden"
-					onClick={() => setOpen(false)}
-				/>
-			)}
-
-			{/* Main */}
-			<div className="flex min-w-0 flex-1 flex-col md:pl-64">
-				<header className="bg-background/80 sticky top-0 z-20 flex h-16 items-center gap-3 border-b px-4 backdrop-blur md:px-8">
-					<Button
-						variant="ghost"
-						size="icon"
-						className="md:hidden"
-						onClick={() => setOpen(true)}
-					>
-						<Menu className="size-5" />
-					</Button>
-					<form
-						className="relative hidden flex-1 sm:block sm:max-w-xs"
-						onSubmit={(e) => {
-							e.preventDefault();
-							router.navigate({ to: "/search", search: { q: search } });
-						}}
-					>
-						<Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-						<Input
-							placeholder="Search…"
-							className="h-9 pl-9"
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-						/>
-					</form>
-					<div className="ml-auto flex items-center gap-1">
-						<Button asChild variant="ghost" size="icon">
-							<Link to="/notifications">
-								<Bell className="size-5" />
+		<Sidebar collapsible="icon">
+			<SidebarHeader>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton size="lg" asChild>
+							<Link to="/dashboard">
+								<div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+									<Receipt className="size-4" />
+								</div>
+								<div className="grid flex-1 text-left leading-tight">
+									<span className="truncate font-semibold">DigiWinners</span>
+									<span className="text-muted-foreground truncate text-xs">
+										IT Services
+									</span>
+								</div>
 							</Link>
-						</Button>
-					</div>
-				</header>
-				<main className="flex-1 p-4 md:p-8">
-					<Outlet />
-				</main>
-			</div>
-		</div>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarHeader>
+
+			<SidebarContent>
+				{NAV_GROUPS.map((group) => (
+					<SidebarGroup key={group.label}>
+						<SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+						<SidebarMenu>
+							{group.items.map((item) => (
+								<SidebarMenuItem key={item.to}>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname.startsWith(item.to)}
+										tooltip={item.label}
+									>
+										<Link to={item.to}>
+											<item.icon />
+											<span>{item.label}</span>
+										</Link>
+									</SidebarMenuButton>
+								</SidebarMenuItem>
+							))}
+						</SidebarMenu>
+					</SidebarGroup>
+				))}
+			</SidebarContent>
+
+			<SidebarFooter>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<SidebarMenuButton size="lg">
+									<Avatar className="size-8 rounded-lg">
+										<AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground rounded-lg text-xs">
+											{initials}
+										</AvatarFallback>
+									</Avatar>
+									<div className="grid flex-1 text-left leading-tight">
+										<span className="truncate font-medium">
+											{user?.name ?? "Account"}
+										</span>
+										<span className="text-muted-foreground truncate text-xs">
+											{user?.email}
+										</span>
+									</div>
+									<ChevronsUpDown className="ml-auto size-4" />
+								</SidebarMenuButton>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent side="top" align="start" className="w-56">
+								<DropdownMenuLabel className="truncate">
+									{user?.email}
+								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={handleSignOut}>
+									<LogOut className="size-4" /> Sign out
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarFooter>
+			<SidebarRail />
+		</Sidebar>
+	);
+}
+
+function AppHeader({ pathname }: { pathname: string }) {
+	const router = useRouter();
+	const [query, setQuery] = useState("");
+	const segments = pathname.split("/").filter(Boolean);
+	const crumbs = segments
+		.map((s) => TITLES[s] ?? null)
+		.filter(Boolean) as string[];
+
+	return (
+		<header className="bg-background/80 sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b px-4 backdrop-blur print:hidden">
+			<SidebarTrigger className="-ml-1" />
+			<Separator orientation="vertical" className="mr-1 h-5" />
+			<Breadcrumb>
+				<BreadcrumbList>
+					<BreadcrumbItem>
+						<BreadcrumbPage className="text-muted-foreground">
+							DigiWinners
+						</BreadcrumbPage>
+					</BreadcrumbItem>
+					{crumbs.slice(0, 1).map((c) => (
+						<span key={c} className="flex items-center gap-2">
+							<BreadcrumbSeparator />
+							<BreadcrumbItem>
+								<BreadcrumbPage>{c}</BreadcrumbPage>
+							</BreadcrumbItem>
+						</span>
+					))}
+				</BreadcrumbList>
+			</Breadcrumb>
+
+			<form
+				className="relative ml-auto hidden sm:block sm:w-56 lg:w-72"
+				onSubmit={(e) => {
+					e.preventDefault();
+					router.navigate({ to: "/search", search: { q: query } });
+				}}
+			>
+				<Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+				<Input
+					placeholder="Search everything…"
+					className="bg-muted/50 h-9 pl-9"
+					value={query}
+					onChange={(e) => setQuery(e.target.value)}
+				/>
+			</form>
+
+			<ThemeToggle />
+
+			<Button asChild variant="ghost" size="icon" className="ml-1">
+				<Link to="/notifications">
+					<Bell className="size-5" />
+				</Link>
+			</Button>
+		</header>
+	);
+}
+
+function ThemeToggle() {
+	const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+
+	useEffect(() => {
+		const stored = localStorage.getItem("theme") as typeof theme | null;
+		if (stored) setTheme(stored);
+	}, []);
+
+	useEffect(() => {
+		const root = document.documentElement;
+		const isDark =
+			theme === "dark" ||
+			(theme === "system" &&
+				window.matchMedia("(prefers-color-scheme: dark)").matches);
+		root.classList.toggle("dark", isDark);
+		if (theme === "system") localStorage.removeItem("theme");
+		else localStorage.setItem("theme", theme);
+	}, [theme]);
+
+	const next =
+		theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
+	const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
+
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			onClick={() => setTheme(next)}
+			title={`Theme: ${theme}`}
+		>
+			<Icon className="size-5" />
+		</Button>
 	);
 }

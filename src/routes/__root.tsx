@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { Toaster } from "#/components/ui/sonner.tsx";
 import { getSession } from "#/lib/auth.functions.ts";
 import appCss from "../styles.css?url";
 
@@ -55,6 +56,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
+				<Toaster richColors position="top-right" />
 				<TanStackDevtools
 					config={{
 						position: "bottom-right",
