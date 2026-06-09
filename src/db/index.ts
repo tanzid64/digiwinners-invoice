@@ -1,5 +1,8 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { env } from 'cloudflare:workers'
+import { drizzle } from 'drizzle-orm/d1'
 
 import * as schema from './schema.ts'
 
-export const db = drizzle(process.env.DATABASE_URL!, { schema })
+// `env.DB` is the D1 binding declared in wrangler.jsonc. Only resolvable
+// inside the Workers request context (server fns / route handlers).
+export const db = drizzle(env.DB, { schema })

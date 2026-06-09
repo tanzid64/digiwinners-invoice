@@ -3,5 +3,13 @@
   "name": "tanstack-start-app",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "digiwinners_receipt",
+      "database_id": "957cc1c8-697b-44df-83b5-a15d2a242142",
+      "migrations_dir": "drizzle"
+    }
+  ]
 }
