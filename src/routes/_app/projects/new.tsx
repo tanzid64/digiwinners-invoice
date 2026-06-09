@@ -1,18 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { PageHeader } from "#/components/page-header.tsx";
-import { Button } from "#/components/ui/button.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
-import { Input } from "#/components/ui/input.tsx";
-import { Label } from "#/components/ui/label.tsx";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "#/components/ui/select.tsx";
+import { useAppForm } from "#/lib/form.tsx";
 import {
 	createProject,
 	listOrdersWithoutProject,
@@ -26,95 +17,89 @@ export const Route = createFileRoute("/_app/projects/new")({
 function NewProject() {
 	const orders = Route.useLoaderData();
 	const router = useRouter();
-	const [orderId, setOrderId] = useState("");
-	const [name, setName] = useState("");
-	const [start, setStart] = useState("");
-	const [end, setEnd] = useState("");
-	const [error, setError] = useState<string | null>(null);
-	const [busy, setBusy] = useState(false);
 
-	async function submit(e: React.FormEvent) {
-		e.preventDefault();
-		setError(null);
-		if (!orderId) return setError("Select an order.");
-		if (!name.trim()) return setError("Project name required.");
-		setBusy(true);
-		try {
-			const created = await createProject({
-				data: {
-					orderId,
-					name,
-					startDate: start ? new Date(start).getTime() : null,
-					endDate: end ? new Date(end).getTime() : null,
-				},
-			});
-			toast.success("Project created");
-			await router.navigate({
-				to: "/projects/$projectId",
-				params: { projectId: created.id },
-			});
-		} catch {
-			toast.error("Could not create project");
-		} finally {
-			setBusy(false);
-		}
-	}
+	const form = useAppForm({
+		defaultValues: { orderId: "", name: "", start: "", end: "" },
+		onSubmit: async ({ value }) => {
+			try {
+				const created = await createProject({
+					data: {
+						orderId: value.orderId,
+						name: value.name,
+						startDate: value.start ? new Date(value.start).getTime() : null,
+						endDate: value.end ? new Date(value.end).getTime() : null,
+					},
+				});
+				toast.success("Project created");
+				await router.navigate({
+					to: "/projects/$projectId",
+					params: { projectId: created.id },
+				});
+			} catch {
+				toast.error("Could not create project");
+			}
+		},
+	});
+
+	const noOrders = orders.length === 0;
 
 	return (
 		<div className="mx-auto max-w-2xl space-y-6">
 			<PageHeader title="New project" backTo="/projects" />
 			<Card>
 				<CardContent>
-					<form className="space-y-5" onSubmit={submit}>
-						<div className="space-y-2">
-							<Label>Order *</Label>
-							{orders.length === 0 ? (
-								<p className="text-muted-foreground text-sm">
-									No orders available — every order already has a project, or
-									none exist yet.
-								</p>
-							) : (
-								<Select value={orderId} onValueChange={setOrderId}>
-									<SelectTrigger>
-										<SelectValue placeholder="Select order" />
-									</SelectTrigger>
-									<SelectContent>
-										{orders.map((o) => (
-											<SelectItem key={o.id} value={o.id}>
-												{o.number}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							)}
-						</div>
-						<div className="space-y-2">
-							<Label>Project name *</Label>
-							<Input value={name} onChange={(e) => setName(e.target.value)} />
-						</div>
-						<div className="grid gap-5 sm:grid-cols-2">
-							<div className="space-y-2">
-								<Label>Start date</Label>
-								<Input
-									type="date"
-									value={start}
-									onChange={(e) => setStart(e.target.value)}
-								/>
+					{noOrders ? (
+						<p className="text-muted-foreground text-sm">
+							No orders available — every order already has a project, or none
+							exist yet.
+						</p>
+					) : (
+						<form
+							className="space-y-5"
+							onSubmit={(e) => {
+								e.preventDefault();
+								form.handleSubmit();
+							}}
+						>
+							<form.AppField
+								name="orderId"
+								validators={{ onSubmit: z.string().min(1, "Select an order") }}
+							>
+								{(f) => (
+									<f.SelectField
+										label="Order"
+										placeholder="Select order"
+										options={orders.map((o) => ({
+											value: o.id,
+											label: o.number,
+										}))}
+									/>
+								)}
+							</form.AppField>
+
+							<form.AppField
+								name="name"
+								validators={{
+									onBlur: z.string().min(1, "Project name required"),
+								}}
+							>
+								{(f) => <f.TextField label="Project name" />}
+							</form.AppField>
+
+							<div className="grid gap-5 sm:grid-cols-2">
+								<form.AppField name="start">
+									{(f) => <f.TextField label="Start date" type="date" />}
+								</form.AppField>
+								<form.AppField name="end">
+									{(f) => <f.TextField label="End date" type="date" />}
+								</form.AppField>
 							</div>
-							<div className="space-y-2">
-								<Label>End date</Label>
-								<Input
-									type="date"
-									value={end}
-									onChange={(e) => setEnd(e.target.value)}
-								/>
-							</div>
-						</div>
-						{error && <p className="text-destructive text-sm">{error}</p>}
-						<Button type="submit" disabled={busy || orders.length === 0}>
-							{busy ? "Saving…" : "Create project"}
-						</Button>
-					</form>
+
+							<form.AppForm>
+								<form.SubmitButton label="Create project" />
+							</form.AppForm>
+						</form>
+					)}
 				</CardContent>
 			</Card>
 		</div>

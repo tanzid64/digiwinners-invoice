@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Trash2 } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { DocItemsTable } from "#/components/doc-items-table.tsx";
 import { PdfButton } from "#/components/pdf-button.tsx";
@@ -12,8 +11,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "#/components/ui/card.tsx";
-import { Input } from "#/components/ui/input.tsx";
-import { Label } from "#/components/ui/label.tsx";
 import {
 	Select,
 	SelectContent,
@@ -29,9 +26,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "#/components/ui/table.tsx";
-import { Textarea } from "#/components/ui/textarea.tsx";
+import { useAppForm } from "#/lib/form.tsx";
 import { fmtDate } from "#/lib/format.ts";
-import { formatMoney, toCents } from "#/lib/money.ts";
+import { formatMoney } from "#/lib/money.ts";
 import type { DocPdfData } from "#/lib/pdf/document-pdf.tsx";
 import {
 	deleteInvoice,
@@ -261,110 +258,97 @@ function RecordPayment({
 	suggested: number;
 	onSaved: () => void;
 }) {
-	const [amount, setAmount] = useState(
-		suggested > 0 ? String(suggested / 100) : "",
-	);
-	const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-	const [method, setMethod] = useState("bank_transfer");
-	const [reference, setReference] = useState("");
-	const [account, setAccount] = useState("");
-	const [notes, setNotes] = useState("");
-	const [busy, setBusy] = useState(false);
-
-	async function save() {
-		const cents = toCents(amount);
-		if (cents <= 0) return;
-		setBusy(true);
-		try {
+	const form = useAppForm({
+		defaultValues: {
+			amount: suggested > 0 ? suggested / 100 : 0,
+			date: new Date().toISOString().slice(0, 10),
+			method: "bank_transfer",
+			reference: "",
+			account: "",
+			notes: "",
+		},
+		onSubmit: async ({ value, formApi }) => {
+			const cents = Math.round((value.amount || 0) * 100);
+			if (cents <= 0) {
+				toast.error("Enter an amount greater than zero");
+				return;
+			}
 			await createPayment({
 				data: {
 					invoiceId,
 					amount: cents,
-					paymentDate: new Date(date).getTime(),
-					method: method as
+					paymentDate: new Date(value.date).getTime(),
+					method: value.method as
 						| "cash"
 						| "bank_transfer"
 						| "cheque"
 						| "mobile_banking"
 						| "other",
-					reference,
-					receivingAccount: account,
-					notes,
+					reference: value.reference,
+					receivingAccount: value.account,
+					notes: value.notes,
 				},
 			});
-			setReference("");
-			setAccount("");
-			setNotes("");
 			toast.success("Payment recorded");
+			formApi.reset();
 			onSaved();
-		} finally {
-			setBusy(false);
-		}
-	}
+		},
+	});
 
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Record payment</CardTitle>
 			</CardHeader>
-			<CardContent className="space-y-3">
-				<div className="grid grid-cols-2 gap-3">
-					<div className="space-y-1">
-						<Label>Amount ({currency})</Label>
-						<Input
-							type="number"
-							min="0"
-							step="0.01"
-							value={amount}
-							onChange={(e) => setAmount(e.target.value)}
-						/>
+			<CardContent>
+				<form
+					className="space-y-3"
+					onSubmit={(e) => {
+						e.preventDefault();
+						form.handleSubmit();
+					}}
+				>
+					<div className="grid grid-cols-2 gap-3">
+						<form.AppField name="amount">
+							{(f) => (
+								<f.NumberField
+									label={`Amount (${currency})`}
+									step="0.01"
+									min="0"
+								/>
+							)}
+						</form.AppField>
+						<form.AppField name="date">
+							{(f) => <f.TextField label="Date" type="date" />}
+						</form.AppField>
 					</div>
-					<div className="space-y-1">
-						<Label>Date</Label>
-						<Input
-							type="date"
-							value={date}
-							onChange={(e) => setDate(e.target.value)}
-						/>
-					</div>
-				</div>
-				<div className="space-y-1">
-					<Label>Method</Label>
-					<Select value={method} onValueChange={setMethod}>
-						<SelectTrigger>
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="cash">Cash</SelectItem>
-							<SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-							<SelectItem value="cheque">Cheque</SelectItem>
-							<SelectItem value="mobile_banking">Mobile Banking</SelectItem>
-							<SelectItem value="other">Other</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
-				<div className="space-y-1">
-					<Label>Reference #</Label>
-					<Input
-						value={reference}
-						onChange={(e) => setReference(e.target.value)}
-					/>
-				</div>
-				<div className="space-y-1">
-					<Label>Receiving account</Label>
-					<Input value={account} onChange={(e) => setAccount(e.target.value)} />
-				</div>
-				<div className="space-y-1">
-					<Label>Notes</Label>
-					<Textarea
-						rows={2}
-						value={notes}
-						onChange={(e) => setNotes(e.target.value)}
-					/>
-				</div>
-				<Button className="w-full" onClick={save} disabled={busy}>
-					{busy ? "Saving…" : "Record payment"}
-				</Button>
+					<form.AppField name="method">
+						{(f) => (
+							<f.SelectField
+								label="Method"
+								options={[
+									{ value: "cash", label: "Cash" },
+									{ value: "bank_transfer", label: "Bank Transfer" },
+									{ value: "cheque", label: "Cheque" },
+									{ value: "mobile_banking", label: "Mobile Banking" },
+									{ value: "other", label: "Other" },
+								]}
+							/>
+						)}
+					</form.AppField>
+					<form.AppField name="reference">
+						{(f) => <f.TextField label="Reference #" />}
+					</form.AppField>
+					<form.AppField name="account">
+						{(f) => <f.TextField label="Receiving account" />}
+					</form.AppField>
+					<form.AppField name="notes">
+						{(f) => <f.TextareaField label="Notes" rows={2} />}
+					</form.AppField>
+					<form.AppForm>
+						<form.SubmitButton label="Record payment" className="w-full" />
+					</form.AppForm>
+				</form>
 			</CardContent>
 		</Card>
 	);

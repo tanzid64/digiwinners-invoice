@@ -1,5 +1,4 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
 import {
 	CustomerForm,
@@ -18,13 +17,11 @@ function EditCustomer() {
 	const data = Route.useLoaderData();
 	const router = useRouter();
 	const { customerId } = Route.useParams();
-	const [submitting, setSubmitting] = useState(false);
 
 	if (!data) return <p>Customer not found.</p>;
 	const c = data.customer;
 
 	async function handle(values: CustomerFormValues) {
-		setSubmitting(true);
 		try {
 			await updateCustomer({ data: { ...values, id: customerId } });
 			toast.success("Customer updated");
@@ -34,8 +31,6 @@ function EditCustomer() {
 			});
 		} catch {
 			toast.error("Could not update customer");
-		} finally {
-			setSubmitting(false);
 		}
 	}
 
@@ -49,7 +44,6 @@ function EditCustomer() {
 			<Card>
 				<CardContent>
 					<CustomerForm
-						submitting={submitting}
 						submitLabel="Save changes"
 						onSubmit={handle}
 						initial={{

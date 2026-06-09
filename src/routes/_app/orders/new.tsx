@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import {
 	DocumentLineItems,
 	emptyMoneyState,
@@ -8,18 +9,9 @@ import {
 	moneyStateToPayload,
 } from "#/components/document-line-items.tsx";
 import { PageHeader } from "#/components/page-header.tsx";
-import { Button } from "#/components/ui/button.tsx";
 import { Card, CardContent } from "#/components/ui/card.tsx";
-import { Input } from "#/components/ui/input.tsx";
-import { Label } from "#/components/ui/label.tsx";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "#/components/ui/select.tsx";
-import { Textarea } from "#/components/ui/textarea.tsx";
+import { Separator } from "#/components/ui/separator.tsx";
+import { useAppForm } from "#/lib/form.tsx";
 import { listCustomers } from "#/lib/server/customers.ts";
 import { createOrder } from "#/lib/server/orders.ts";
 import { listServices } from "#/lib/server/services.ts";
@@ -32,121 +24,166 @@ export const Route = createFileRoute("/_app/orders/new")({
 	component: NewOrder,
 });
 
+function Section({
+	title,
+	description,
+	children,
+}: {
+	title: string;
+	description?: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<div className="grid gap-x-8 gap-y-4 md:grid-cols-[220px_1fr]">
+			<div>
+				<h3 className="text-sm font-semibold">{title}</h3>
+				{description ? (
+					<p className="text-muted-foreground mt-0.5 text-sm">{description}</p>
+				) : null}
+			</div>
+			<div className="space-y-4">{children}</div>
+		</div>
+	);
+}
+
 function NewOrder() {
 	const { customers, services } = Route.useLoaderData();
 	const router = useRouter();
-	const [customerId, setCustomerId] = useState("");
-	const [priority, setPriority] = useState<
-		"low" | "medium" | "high" | "urgent"
-	>("medium");
-	const [delivery, setDelivery] = useState("");
-	const [notes, setNotes] = useState("");
 	const [money, setMoney] = useState<MoneyState>(emptyMoneyState);
-	const [error, setError] = useState<string | null>(null);
-	const [submitting, setSubmitting] = useState(false);
+	const [itemsError, setItemsError] = useState<string | null>(null);
 
-	async function submit(e: React.FormEvent) {
-		e.preventDefault();
-		setError(null);
-		if (!customerId) return setError("Select a customer.");
-		const payload = moneyStateToPayload(money);
-		if (payload.items.length === 0) return setError("Add at least one item.");
-		setSubmitting(true);
-		try {
-			const created = await createOrder({
-				data: {
-					customerId,
-					priority,
-					currency: "USD",
-					expectedDelivery: delivery ? new Date(delivery).getTime() : null,
-					notes,
-					items: payload.items,
-				},
-			});
-			toast.success(`Order ${created.number} created`);
-			await router.navigate({
-				to: "/orders/$orderId",
-				params: { orderId: created.id },
-			});
-		} catch {
-			toast.error("Could not create order");
-		} finally {
-			setSubmitting(false);
-		}
-	}
+	const form = useAppForm({
+		defaultValues: {
+			customerId: "",
+			priority: "medium",
+			expectedDelivery: "",
+			notes: "",
+		},
+		onSubmit: async ({ value }) => {
+			const payload = moneyStateToPayload(money);
+			if (payload.items.length === 0) {
+				setItemsError("Add at least one line item with a name.");
+				return;
+			}
+			setItemsError(null);
+			try {
+				const created = await createOrder({
+					data: {
+						customerId: value.customerId,
+						priority: value.priority as "low" | "medium" | "high" | "urgent",
+						currency: "USD",
+						expectedDelivery: value.expectedDelivery
+							? new Date(value.expectedDelivery).getTime()
+							: null,
+						notes: value.notes,
+						items: payload.items,
+					},
+				});
+				toast.success(`Order ${created.number} created`);
+				await router.navigate({
+					to: "/orders/$orderId",
+					params: { orderId: created.id },
+				});
+			} catch {
+				toast.error("Could not create order");
+			}
+		},
+	});
 
 	return (
-		<div className="space-y-6">
+		<div className="mx-auto max-w-4xl space-y-6">
 			<PageHeader title="New order" backTo="/orders" />
 			<Card>
-				<CardContent>
-					<form className="space-y-6" onSubmit={submit}>
-						<div className="grid gap-5 sm:grid-cols-3">
-							<div className="space-y-2">
-								<Label>Customer *</Label>
-								<Select value={customerId} onValueChange={setCustomerId}>
-									<SelectTrigger>
-										<SelectValue placeholder="Select customer" />
-									</SelectTrigger>
-									<SelectContent>
-										{customers.map((c) => (
-											<SelectItem key={c.id} value={c.id}>
-												{c.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
+				<CardContent className="py-2">
+					<form
+						className="space-y-8"
+						onSubmit={(e) => {
+							e.preventDefault();
+							form.handleSubmit();
+						}}
+					>
+						<Section
+							title="Order details"
+							description="Who the order is for and how it's prioritised."
+						>
+							<form.AppField
+								name="customerId"
+								validators={{
+									onSubmit: z.string().min(1, "Select a customer"),
+								}}
+							>
+								{(f) => (
+									<f.SelectField
+										label="Customer"
+										placeholder="Select customer"
+										options={customers.map((c) => ({
+											value: c.id,
+											label: c.companyName
+												? `${c.name} · ${c.companyName}`
+												: c.name,
+										}))}
+									/>
+								)}
+							</form.AppField>
+							<div className="grid gap-4 sm:grid-cols-2">
+								<form.AppField name="priority">
+									{(f) => (
+										<f.SelectField
+											label="Priority"
+											options={[
+												{ value: "low", label: "Low" },
+												{ value: "medium", label: "Medium" },
+												{ value: "high", label: "High" },
+												{ value: "urgent", label: "Urgent" },
+											]}
+										/>
+									)}
+								</form.AppField>
+								<form.AppField name="expectedDelivery">
+									{(f) => <f.TextField label="Expected delivery" type="date" />}
+								</form.AppField>
 							</div>
-							<div className="space-y-2">
-								<Label>Priority</Label>
-								<Select
-									value={priority}
-									onValueChange={(v) => setPriority(v as typeof priority)}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="low">Low</SelectItem>
-										<SelectItem value="medium">Medium</SelectItem>
-										<SelectItem value="high">High</SelectItem>
-										<SelectItem value="urgent">Urgent</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-							<div className="space-y-2">
-								<Label>Expected delivery</Label>
-								<Input
-									type="date"
-									value={delivery}
-									onChange={(e) => setDelivery(e.target.value)}
-								/>
-							</div>
-						</div>
+						</Section>
 
-						<DocumentLineItems
-							value={money}
-							onChange={setMoney}
-							services={services.map((s) => ({
-								id: s.id,
-								name: s.name,
-								unitPrice: s.unitPrice,
-							}))}
-						/>
+						<Separator />
 
-						<div className="space-y-2">
-							<Label>Internal notes</Label>
-							<Textarea
-								rows={3}
-								value={notes}
-								onChange={(e) => setNotes(e.target.value)}
+						<Section
+							title="Line items"
+							description="Pick catalog services or add custom items."
+						>
+							<DocumentLineItems
+								value={money}
+								onChange={(m) => {
+									setMoney(m);
+									if (itemsError) setItemsError(null);
+								}}
+								services={services.map((s) => ({
+									id: s.id,
+									name: s.name,
+									unitPrice: s.unitPrice,
+								}))}
 							/>
-						</div>
+							{itemsError ? (
+								<p className="text-destructive text-sm">{itemsError}</p>
+							) : null}
+						</Section>
 
-						{error && <p className="text-destructive text-sm">{error}</p>}
-						<Button type="submit" disabled={submitting}>
-							{submitting ? "Saving…" : "Create order"}
-						</Button>
+						<Separator />
+
+						<Section
+							title="Notes"
+							description="Internal only — not shown to the customer."
+						>
+							<form.AppField name="notes">
+								{(f) => <f.TextareaField label="" rows={3} />}
+							</form.AppField>
+						</Section>
+
+						<div className="flex justify-end border-t pt-5">
+							<form.AppForm>
+								<form.SubmitButton label="Create order" />
+							</form.AppForm>
+						</div>
 					</form>
 				</CardContent>
 			</Card>

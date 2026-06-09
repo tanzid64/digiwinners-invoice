@@ -1,5 +1,4 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
 import {
 	type BuilderSubmit,
@@ -22,10 +21,8 @@ export const Route = createFileRoute("/_app/quotations/new")({
 function NewQuotation() {
 	const { customers, services } = Route.useLoaderData();
 	const router = useRouter();
-	const [submitting, setSubmitting] = useState(false);
 
 	async function handle(d: BuilderSubmit) {
-		setSubmitting(true);
 		try {
 			const created = await createQuotation({
 				data: {
@@ -45,8 +42,6 @@ function NewQuotation() {
 			});
 		} catch {
 			toast.error("Could not create quotation");
-		} finally {
-			setSubmitting(false);
 		}
 	}
 
@@ -64,7 +59,6 @@ function NewQuotation() {
 						}))}
 						secondaryDateLabel="Valid until"
 						submitLabel="Create quotation"
-						submitting={submitting}
 						onSubmit={handle}
 					/>
 				</CardContent>

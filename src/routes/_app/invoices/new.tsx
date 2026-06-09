@@ -1,5 +1,4 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
 import {
 	type BuilderSubmit,
@@ -22,10 +21,8 @@ export const Route = createFileRoute("/_app/invoices/new")({
 function NewInvoice() {
 	const { customers, services } = Route.useLoaderData();
 	const router = useRouter();
-	const [submitting, setSubmitting] = useState(false);
 
 	async function handle(d: BuilderSubmit) {
-		setSubmitting(true);
 		try {
 			const due = d.secondaryDate ?? d.issueDate + 30 * 86400000; // default net-30
 			const created = await createInvoice({
@@ -46,8 +43,6 @@ function NewInvoice() {
 			});
 		} catch {
 			toast.error("Could not create invoice");
-		} finally {
-			setSubmitting(false);
 		}
 	}
 
@@ -65,7 +60,6 @@ function NewInvoice() {
 						}))}
 						secondaryDateLabel="Due date"
 						submitLabel="Create invoice"
-						submitting={submitting}
 						onSubmit={handle}
 					/>
 				</CardContent>

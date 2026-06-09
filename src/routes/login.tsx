@@ -1,11 +1,9 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Button } from "#/components/ui/button.tsx";
-import { Input } from "#/components/ui/input.tsx";
-import { Label } from "#/components/ui/label.tsx";
 import { getSession } from "#/lib/auth.functions.ts";
 import { signIn } from "#/lib/auth-client.ts";
+import { useAppForm } from "#/lib/form.tsx";
 
 const searchSchema = z.object({
 	redirect: z.string().optional(),
@@ -14,7 +12,6 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/login")({
 	validateSearch: searchSchema,
 	beforeLoad: async ({ search }) => {
-		// Already signed in → skip the login page.
 		const session = await getSession();
 		if (session) {
 			throw redirect({ to: search.redirect || "/" });
@@ -26,31 +23,29 @@ export const Route = createFileRoute("/login")({
 function Login() {
 	const router = useRouter();
 	const search = Route.useSearch();
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
 	const [error, setError] = useState<string | null>(null);
-	const [pending, setPending] = useState(false);
 
-	async function onSubmit(e: React.FormEvent) {
-		e.preventDefault();
-		setError(null);
-		setPending(true);
-
-		const { error } = await signIn.email({ email, password });
-
-		setPending(false);
-		if (error) {
-			setError(error.message || "Invalid email or password");
-			return;
-		}
-		await router.navigate({ to: search.redirect || "/" });
-	}
+	const form = useAppForm({
+		defaultValues: { email: "", password: "" },
+		onSubmit: async ({ value }) => {
+			setError(null);
+			const { error } = await signIn.email(value);
+			if (error) {
+				setError(error.message || "Invalid email or password");
+				return;
+			}
+			await router.navigate({ to: search.redirect || "/" });
+		},
+	});
 
 	return (
-		<div className="flex min-h-svh items-center justify-center p-4">
+		<div className="bg-muted/30 flex min-h-svh items-center justify-center p-4">
 			<form
-				onSubmit={onSubmit}
-				className="w-full max-w-sm space-y-6 rounded-xl border p-8 shadow-sm"
+				onSubmit={(e) => {
+					e.preventDefault();
+					form.handleSubmit();
+				}}
+				className="bg-card w-full max-w-sm space-y-6 rounded-xl border p-8 shadow-sm"
 			>
 				<div className="flex flex-col items-center gap-2">
 					<img
@@ -59,37 +54,38 @@ function Login() {
 						className="h-12 w-auto"
 					/>
 					<h1 className="text-xl font-semibold">Sign in</h1>
+					<p className="text-muted-foreground text-sm">
+						DigiWinners management console
+					</p>
 				</div>
 
-				<div className="space-y-2">
-					<Label htmlFor="email">Email</Label>
-					<Input
-						id="email"
-						type="email"
-						autoComplete="email"
-						required
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-					/>
-				</div>
+				<form.AppField
+					name="email"
+					validators={{ onBlur: z.string().email("Enter a valid email") }}
+				>
+					{(f) => (
+						<f.TextField label="Email" type="email" autoComplete="email" />
+					)}
+				</form.AppField>
 
-				<div className="space-y-2">
-					<Label htmlFor="password">Password</Label>
-					<Input
-						id="password"
-						type="password"
-						autoComplete="current-password"
-						required
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-					/>
-				</div>
+				<form.AppField
+					name="password"
+					validators={{ onBlur: z.string().min(1, "Password required") }}
+				>
+					{(f) => (
+						<f.TextField
+							label="Password"
+							type="password"
+							autoComplete="current-password"
+						/>
+					)}
+				</form.AppField>
 
-				{error && <p className="text-sm text-red-500">{error}</p>}
+				{error && <p className="text-destructive text-sm">{error}</p>}
 
-				<Button type="submit" className="w-full" disabled={pending}>
-					{pending ? "Signing in…" : "Sign in"}
-				</Button>
+				<form.AppForm>
+					<form.SubmitButton label="Sign in" className="w-full" />
+				</form.AppForm>
 			</form>
 		</div>
 	);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { z } from "zod";
 import {
 	DocumentLineItems,
 	emptyMoneyState,
@@ -6,17 +7,8 @@ import {
 	moneyStateToPayload,
 	type ServiceOption,
 } from "#/components/document-line-items.tsx";
-import { Button } from "#/components/ui/button.tsx";
-import { Input } from "#/components/ui/input.tsx";
-import { Label } from "#/components/ui/label.tsx";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "#/components/ui/select.tsx";
-import { Textarea } from "#/components/ui/textarea.tsx";
+import { Separator } from "#/components/ui/separator.tsx";
+import { useAppForm } from "#/lib/form.tsx";
 
 export interface BuilderSubmit {
 	customerId: string;
@@ -31,113 +23,141 @@ function todayISO() {
 	return new Date().toISOString().slice(0, 10);
 }
 
+function Section({
+	title,
+	description,
+	children,
+}: {
+	title: string;
+	description?: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<div className="grid gap-x-8 gap-y-4 md:grid-cols-[220px_1fr]">
+			<div>
+				<h3 className="text-sm font-semibold">{title}</h3>
+				{description ? (
+					<p className="text-muted-foreground mt-0.5 text-sm">{description}</p>
+				) : null}
+			</div>
+			<div className="space-y-4">{children}</div>
+		</div>
+	);
+}
+
 export function DocumentBuilderForm({
 	customers,
 	services,
 	secondaryDateLabel,
 	submitLabel,
-	submitting,
 	onSubmit,
 }: {
 	customers: { id: string; name: string; companyName?: string | null }[];
 	services: ServiceOption[];
 	secondaryDateLabel: string;
 	submitLabel: string;
-	submitting?: boolean;
-	onSubmit: (data: BuilderSubmit) => void;
+	onSubmit: (data: BuilderSubmit) => Promise<void> | void;
 }) {
-	const [customerId, setCustomerId] = useState("");
-	const [issueDate, setIssueDate] = useState(todayISO());
-	const [secondaryDate, setSecondaryDate] = useState("");
-	const [notes, setNotes] = useState("");
-	const [terms, setTerms] = useState("");
 	const [money, setMoney] = useState<MoneyState>(emptyMoneyState);
-	const [error, setError] = useState<string | null>(null);
+	const [itemsError, setItemsError] = useState<string | null>(null);
 
-	function submit(e: React.FormEvent) {
-		e.preventDefault();
-		setError(null);
-		if (!customerId) return setError("Select a customer.");
-		const payload = moneyStateToPayload(money);
-		if (payload.items.length === 0)
-			return setError("Add at least one line item with a name.");
-		onSubmit({
-			customerId,
-			issueDate: new Date(issueDate).getTime(),
-			secondaryDate: secondaryDate ? new Date(secondaryDate).getTime() : null,
-			notes,
-			terms,
-			money: payload,
-		});
-	}
+	const form = useAppForm({
+		defaultValues: {
+			customerId: "",
+			issueDate: todayISO(),
+			secondaryDate: "",
+			notes: "",
+			terms: "",
+		},
+		onSubmit: async ({ value }) => {
+			const payload = moneyStateToPayload(money);
+			if (payload.items.length === 0) {
+				setItemsError("Add at least one line item with a name.");
+				return;
+			}
+			setItemsError(null);
+			await onSubmit({
+				customerId: value.customerId,
+				issueDate: new Date(value.issueDate).getTime(),
+				secondaryDate: value.secondaryDate
+					? new Date(value.secondaryDate).getTime()
+					: null,
+				notes: value.notes,
+				terms: value.terms,
+				money: payload,
+			});
+		},
+	});
 
 	return (
-		<form className="space-y-6" onSubmit={submit}>
-			<div className="grid gap-5 sm:grid-cols-3">
-				<div className="space-y-2 sm:col-span-1">
-					<Label>Customer *</Label>
-					<Select value={customerId} onValueChange={setCustomerId}>
-						<SelectTrigger>
-							<SelectValue placeholder="Select customer" />
-						</SelectTrigger>
-						<SelectContent>
-							{customers.map((c) => (
-								<SelectItem key={c.id} value={c.id}>
-									{c.name}
-									{c.companyName ? ` · ${c.companyName}` : ""}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+		<form
+			className="space-y-8"
+			onSubmit={(e) => {
+				e.preventDefault();
+				form.handleSubmit();
+			}}
+		>
+			<Section title="Details" description="Customer and key dates.">
+				<form.AppField
+					name="customerId"
+					validators={{ onSubmit: z.string().min(1, "Select a customer") }}
+				>
+					{(f) => (
+						<f.SelectField
+							label="Customer"
+							placeholder="Select customer"
+							options={customers.map((c) => ({
+								value: c.id,
+								label: c.companyName ? `${c.name} · ${c.companyName}` : c.name,
+							}))}
+						/>
+					)}
+				</form.AppField>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<form.AppField name="issueDate">
+						{(f) => <f.TextField label="Issue date" type="date" />}
+					</form.AppField>
+					<form.AppField name="secondaryDate">
+						{(f) => <f.TextField label={secondaryDateLabel} type="date" />}
+					</form.AppField>
 				</div>
-				<div className="space-y-2">
-					<Label>Issue date</Label>
-					<Input
-						type="date"
-						value={issueDate}
-						onChange={(e) => setIssueDate(e.target.value)}
-					/>
-				</div>
-				<div className="space-y-2">
-					<Label>{secondaryDateLabel}</Label>
-					<Input
-						type="date"
-						value={secondaryDate}
-						onChange={(e) => setSecondaryDate(e.target.value)}
-					/>
-				</div>
+			</Section>
+
+			<Separator />
+
+			<Section
+				title="Line items"
+				description="Catalog services or custom items, with discount and tax."
+			>
+				<DocumentLineItems
+					value={money}
+					onChange={(m) => {
+						setMoney(m);
+						if (itemsError) setItemsError(null);
+					}}
+					services={services}
+				/>
+				{itemsError ? (
+					<p className="text-destructive text-sm">{itemsError}</p>
+				) : null}
+			</Section>
+
+			<Separator />
+
+			<Section title="Notes & terms" description="Shown on the generated PDF.">
+				<form.AppField name="notes">
+					{(f) => <f.TextareaField label="Notes" rows={3} />}
+				</form.AppField>
+				<form.AppField name="terms">
+					{(f) => <f.TextareaField label="Terms" rows={3} />}
+				</form.AppField>
+			</Section>
+
+			<div className="flex justify-end border-t pt-5">
+				<form.AppForm>
+					<form.SubmitButton label={submitLabel} />
+				</form.AppForm>
 			</div>
-
-			<DocumentLineItems
-				value={money}
-				onChange={setMoney}
-				services={services}
-			/>
-
-			<div className="grid gap-5 sm:grid-cols-2">
-				<div className="space-y-2">
-					<Label>Notes</Label>
-					<Textarea
-						rows={3}
-						value={notes}
-						onChange={(e) => setNotes(e.target.value)}
-					/>
-				</div>
-				<div className="space-y-2">
-					<Label>Terms</Label>
-					<Textarea
-						rows={3}
-						value={terms}
-						onChange={(e) => setTerms(e.target.value)}
-					/>
-				</div>
-			</div>
-
-			{error && <p className="text-destructive text-sm">{error}</p>}
-
-			<Button type="submit" disabled={submitting}>
-				{submitting ? "Saving…" : submitLabel}
-			</Button>
 		</form>
 	);
 }
