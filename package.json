@@ -26,6 +26,7 @@
     "@cloudflare/vite-plugin": "^1.26.0",
     "@faker-js/faker": "^10.3.0",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@react-pdf/renderer": "^4.5.1",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/match-sorter-utils": "latest",
     "@tanstack/react-devtools": "latest",
