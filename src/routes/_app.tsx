@@ -6,6 +6,8 @@ import {
 } from "@tanstack/react-router";
 import {
 	BarChart3,
+	Bell,
+	FileArchive,
 	FileText,
 	FolderKanban,
 	LayoutDashboard,
@@ -13,12 +15,14 @@ import {
 	Menu,
 	Package,
 	Receipt,
+	Search,
 	Users,
 	Wallet,
 	Wrench,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "#/components/ui/button.tsx";
+import { Input } from "#/components/ui/input.tsx";
 import { signOut } from "#/lib/auth-client.ts";
 import { cn } from "#/lib/utils.ts";
 
@@ -36,11 +40,13 @@ const NAV = [
 	{ to: "/invoices", label: "Invoices", icon: Receipt },
 	{ to: "/payments", label: "Payments", icon: Wallet },
 	{ to: "/reports", label: "Reports", icon: BarChart3 },
+	{ to: "/documents", label: "Documents", icon: FileArchive },
 ] as const;
 
 function AppLayout() {
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
+	const [search, setSearch] = useState("");
 
 	async function handleSignOut() {
 		await signOut();
@@ -113,7 +119,28 @@ function AppLayout() {
 					>
 						<Menu className="size-5" />
 					</Button>
-					<div className="font-semibold">DigiWinners Console</div>
+					<form
+						className="relative hidden flex-1 sm:block sm:max-w-xs"
+						onSubmit={(e) => {
+							e.preventDefault();
+							router.navigate({ to: "/search", search: { q: search } });
+						}}
+					>
+						<Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+						<Input
+							placeholder="Search…"
+							className="h-9 pl-9"
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+						/>
+					</form>
+					<div className="ml-auto flex items-center gap-1">
+						<Button asChild variant="ghost" size="icon">
+							<Link to="/notifications">
+								<Bell className="size-5" />
+							</Link>
+						</Button>
+					</div>
 				</header>
 				<main className="flex-1 p-4 md:p-8">
 					<Outlet />

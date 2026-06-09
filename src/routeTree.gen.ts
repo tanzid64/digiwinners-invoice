@@ -14,13 +14,16 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppServicesRouteImport } from './routes/_app/services'
+import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppQuotationsIndexRouteImport } from './routes/_app/quotations/index'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app/projects/index'
 import { Route as AppPaymentsIndexRouteImport } from './routes/_app/payments/index'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
+import { Route as AppNotificationsIndexRouteImport } from './routes/_app/notifications/index'
 import { Route as AppInvoicesIndexRouteImport } from './routes/_app/invoices/index'
+import { Route as AppDocumentsIndexRouteImport } from './routes/_app/documents/index'
 import { Route as AppCustomersIndexRouteImport } from './routes/_app/customers/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppQuotationsNewRouteImport } from './routes/_app/quotations/new'
@@ -59,6 +62,11 @@ const AppServicesRoute = AppServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -89,9 +97,19 @@ const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   path: '/orders/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNotificationsIndexRoute = AppNotificationsIndexRouteImport.update({
+  id: '/notifications/',
+  path: '/notifications/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInvoicesIndexRoute = AppInvoicesIndexRouteImport.update({
   id: '/invoices/',
   path: '/invoices/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentsIndexRoute = AppDocumentsIndexRouteImport.update({
+  id: '/documents/',
+  path: '/documents/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCustomersIndexRoute = AppCustomersIndexRouteImport.update({
@@ -168,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/dashboard': typeof AppDashboardRoute
   '/reports': typeof AppReportsRoute
+  '/search': typeof AppSearchRoute
   '/services': typeof AppServicesRoute
   '/customers/$customerId': typeof AppCustomersCustomerIdRouteWithChildren
   '/customers/new': typeof AppCustomersNewRoute
@@ -181,7 +200,9 @@ export interface FileRoutesByFullPath {
   '/quotations/new': typeof AppQuotationsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/customers/': typeof AppCustomersIndexRoute
+  '/documents/': typeof AppDocumentsIndexRoute
   '/invoices/': typeof AppInvoicesIndexRoute
+  '/notifications/': typeof AppNotificationsIndexRoute
   '/orders/': typeof AppOrdersIndexRoute
   '/payments/': typeof AppPaymentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
@@ -194,6 +215,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/dashboard': typeof AppDashboardRoute
   '/reports': typeof AppReportsRoute
+  '/search': typeof AppSearchRoute
   '/services': typeof AppServicesRoute
   '/customers/$customerId': typeof AppCustomersCustomerIdRouteWithChildren
   '/customers/new': typeof AppCustomersNewRoute
@@ -207,7 +229,9 @@ export interface FileRoutesByTo {
   '/quotations/new': typeof AppQuotationsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/customers': typeof AppCustomersIndexRoute
+  '/documents': typeof AppDocumentsIndexRoute
   '/invoices': typeof AppInvoicesIndexRoute
+  '/notifications': typeof AppNotificationsIndexRoute
   '/orders': typeof AppOrdersIndexRoute
   '/payments': typeof AppPaymentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
@@ -222,6 +246,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/reports': typeof AppReportsRoute
+  '/_app/search': typeof AppSearchRoute
   '/_app/services': typeof AppServicesRoute
   '/_app/customers/$customerId': typeof AppCustomersCustomerIdRouteWithChildren
   '/_app/customers/new': typeof AppCustomersNewRoute
@@ -235,7 +260,9 @@ export interface FileRoutesById {
   '/_app/quotations/new': typeof AppQuotationsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_app/customers/': typeof AppCustomersIndexRoute
+  '/_app/documents/': typeof AppDocumentsIndexRoute
   '/_app/invoices/': typeof AppInvoicesIndexRoute
+  '/_app/notifications/': typeof AppNotificationsIndexRoute
   '/_app/orders/': typeof AppOrdersIndexRoute
   '/_app/payments/': typeof AppPaymentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
@@ -250,6 +277,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/dashboard'
     | '/reports'
+    | '/search'
     | '/services'
     | '/customers/$customerId'
     | '/customers/new'
@@ -263,7 +291,9 @@ export interface FileRouteTypes {
     | '/quotations/new'
     | '/api/auth/$'
     | '/customers/'
+    | '/documents/'
     | '/invoices/'
+    | '/notifications/'
     | '/orders/'
     | '/payments/'
     | '/projects/'
@@ -276,6 +306,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/dashboard'
     | '/reports'
+    | '/search'
     | '/services'
     | '/customers/$customerId'
     | '/customers/new'
@@ -289,7 +320,9 @@ export interface FileRouteTypes {
     | '/quotations/new'
     | '/api/auth/$'
     | '/customers'
+    | '/documents'
     | '/invoices'
+    | '/notifications'
     | '/orders'
     | '/payments'
     | '/projects'
@@ -303,6 +336,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/_app/dashboard'
     | '/_app/reports'
+    | '/_app/search'
     | '/_app/services'
     | '/_app/customers/$customerId'
     | '/_app/customers/new'
@@ -316,7 +350,9 @@ export interface FileRouteTypes {
     | '/_app/quotations/new'
     | '/api/auth/$'
     | '/_app/customers/'
+    | '/_app/documents/'
     | '/_app/invoices/'
+    | '/_app/notifications/'
     | '/_app/orders/'
     | '/_app/payments/'
     | '/_app/projects/'
@@ -369,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppServicesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/reports': {
       id: '/_app/reports'
       path: '/reports'
@@ -411,11 +454,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/notifications/': {
+      id: '/_app/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AppNotificationsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/invoices/': {
       id: '/_app/invoices/'
       path: '/invoices'
       fullPath: '/invoices/'
       preLoaderRoute: typeof AppInvoicesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documents/': {
+      id: '/_app/documents/'
+      path: '/documents'
+      fullPath: '/documents/'
+      preLoaderRoute: typeof AppDocumentsIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/customers/': {
@@ -529,6 +586,7 @@ const AppCustomersCustomerIdRouteWithChildren =
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppReportsRoute: typeof AppReportsRoute
+  AppSearchRoute: typeof AppSearchRoute
   AppServicesRoute: typeof AppServicesRoute
   AppCustomersCustomerIdRoute: typeof AppCustomersCustomerIdRouteWithChildren
   AppCustomersNewRoute: typeof AppCustomersNewRoute
@@ -541,7 +599,9 @@ interface AppRouteChildren {
   AppQuotationsQuotationIdRoute: typeof AppQuotationsQuotationIdRoute
   AppQuotationsNewRoute: typeof AppQuotationsNewRoute
   AppCustomersIndexRoute: typeof AppCustomersIndexRoute
+  AppDocumentsIndexRoute: typeof AppDocumentsIndexRoute
   AppInvoicesIndexRoute: typeof AppInvoicesIndexRoute
+  AppNotificationsIndexRoute: typeof AppNotificationsIndexRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
   AppPaymentsIndexRoute: typeof AppPaymentsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
@@ -551,6 +611,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppReportsRoute: AppReportsRoute,
+  AppSearchRoute: AppSearchRoute,
   AppServicesRoute: AppServicesRoute,
   AppCustomersCustomerIdRoute: AppCustomersCustomerIdRouteWithChildren,
   AppCustomersNewRoute: AppCustomersNewRoute,
@@ -563,7 +624,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppQuotationsQuotationIdRoute: AppQuotationsQuotationIdRoute,
   AppQuotationsNewRoute: AppQuotationsNewRoute,
   AppCustomersIndexRoute: AppCustomersIndexRoute,
+  AppDocumentsIndexRoute: AppDocumentsIndexRoute,
   AppInvoicesIndexRoute: AppInvoicesIndexRoute,
+  AppNotificationsIndexRoute: AppNotificationsIndexRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
   AppPaymentsIndexRoute: AppPaymentsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,

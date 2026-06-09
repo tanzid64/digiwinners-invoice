@@ -346,3 +346,20 @@ a {
     color: var(--foreground);
   }
 }
+
+@media print {
+  aside,
+  header {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .md\:pl-64 {
+    padding-left: 0 !important;
+  }
+  body::before,
+  body::after {
+    display: none !important;
+  }
+}
