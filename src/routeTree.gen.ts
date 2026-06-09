@@ -11,8 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppServicesRouteImport } from './routes/_app/services'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
+import { Route as AppQuotationsRouteImport } from './routes/_app/quotations'
+import { Route as AppProjectsRouteImport } from './routes/_app/projects'
+import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
+import { Route as AppOrdersRouteImport } from './routes/_app/orders'
+import { Route as AppInvoicesRouteImport } from './routes/_app/invoices'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppCustomersIndexRouteImport } from './routes/_app/customers/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppCustomersNewRouteImport } from './routes/_app/customers/new'
+import { Route as AppCustomersCustomerIdRouteImport } from './routes/_app/customers/$customerId'
+import { Route as AppCustomersCustomerIdEditRouteImport } from './routes/_app/customers/$customerId.edit'
 
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
@@ -24,46 +37,199 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppServicesRoute = AppServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuotationsRoute = AppQuotationsRouteImport.update({
+  id: '/quotations',
+  path: '/quotations',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProjectsRoute = AppProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentsRoute = AppPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersRoute = AppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInvoicesRoute = AppInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomersIndexRoute = AppCustomersIndexRouteImport.update({
+  id: '/customers/',
+  path: '/customers/',
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppCustomersNewRoute = AppCustomersNewRouteImport.update({
+  id: '/customers/new',
+  path: '/customers/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomersCustomerIdRoute = AppCustomersCustomerIdRouteImport.update({
+  id: '/customers/$customerId',
+  path: '/customers/$customerId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomersCustomerIdEditRoute =
+  AppCustomersCustomerIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AppCustomersCustomerIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/invoices': typeof AppInvoicesRoute
+  '/orders': typeof AppOrdersRoute
+  '/payments': typeof AppPaymentsRoute
+  '/projects': typeof AppProjectsRoute
+  '/quotations': typeof AppQuotationsRoute
+  '/reports': typeof AppReportsRoute
+  '/services': typeof AppServicesRoute
+  '/customers/$customerId': typeof AppCustomersCustomerIdRouteWithChildren
+  '/customers/new': typeof AppCustomersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/customers/': typeof AppCustomersIndexRoute
+  '/customers/$customerId/edit': typeof AppCustomersCustomerIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/invoices': typeof AppInvoicesRoute
+  '/orders': typeof AppOrdersRoute
+  '/payments': typeof AppPaymentsRoute
+  '/projects': typeof AppProjectsRoute
+  '/quotations': typeof AppQuotationsRoute
+  '/reports': typeof AppReportsRoute
+  '/services': typeof AppServicesRoute
+  '/customers/$customerId': typeof AppCustomersCustomerIdRouteWithChildren
+  '/customers/new': typeof AppCustomersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/customers': typeof AppCustomersIndexRoute
+  '/customers/$customerId/edit': typeof AppCustomersCustomerIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/invoices': typeof AppInvoicesRoute
+  '/_app/orders': typeof AppOrdersRoute
+  '/_app/payments': typeof AppPaymentsRoute
+  '/_app/projects': typeof AppProjectsRoute
+  '/_app/quotations': typeof AppQuotationsRoute
+  '/_app/reports': typeof AppReportsRoute
+  '/_app/services': typeof AppServicesRoute
+  '/_app/customers/$customerId': typeof AppCustomersCustomerIdRouteWithChildren
+  '/_app/customers/new': typeof AppCustomersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_app/customers/': typeof AppCustomersIndexRoute
+  '/_app/customers/$customerId/edit': typeof AppCustomersCustomerIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/mcp' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/mcp'
+    | '/dashboard'
+    | '/invoices'
+    | '/orders'
+    | '/payments'
+    | '/projects'
+    | '/quotations'
+    | '/reports'
+    | '/services'
+    | '/customers/$customerId'
+    | '/customers/new'
+    | '/api/auth/$'
+    | '/customers/'
+    | '/customers/$customerId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/mcp' | '/api/auth/$'
-  id: '__root__' | '/' | '/login' | '/mcp' | '/api/auth/$'
+  to:
+    | '/'
+    | '/login'
+    | '/mcp'
+    | '/dashboard'
+    | '/invoices'
+    | '/orders'
+    | '/payments'
+    | '/projects'
+    | '/quotations'
+    | '/reports'
+    | '/services'
+    | '/customers/$customerId'
+    | '/customers/new'
+    | '/api/auth/$'
+    | '/customers'
+    | '/customers/$customerId/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/mcp'
+    | '/_app/dashboard'
+    | '/_app/invoices'
+    | '/_app/orders'
+    | '/_app/payments'
+    | '/_app/projects'
+    | '/_app/quotations'
+    | '/_app/reports'
+    | '/_app/services'
+    | '/_app/customers/$customerId'
+    | '/_app/customers/new'
+    | '/api/auth/$'
+    | '/_app/customers/'
+    | '/_app/customers/$customerId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -85,12 +251,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/services': {
+      id: '/_app/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof AppServicesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/quotations': {
+      id: '/_app/quotations'
+      path: '/quotations'
+      fullPath: '/quotations'
+      preLoaderRoute: typeof AppQuotationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/projects': {
+      id: '/_app/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof AppProjectsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/payments': {
+      id: '/_app/payments'
+      path: '/payments'
+      fullPath: '/payments'
+      preLoaderRoute: typeof AppPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders': {
+      id: '/_app/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/invoices': {
+      id: '/_app/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof AppInvoicesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/customers/': {
+      id: '/_app/customers/'
+      path: '/customers'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof AppCustomersIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -99,11 +335,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/customers/new': {
+      id: '/_app/customers/new'
+      path: '/customers/new'
+      fullPath: '/customers/new'
+      preLoaderRoute: typeof AppCustomersNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/customers/$customerId': {
+      id: '/_app/customers/$customerId'
+      path: '/customers/$customerId'
+      fullPath: '/customers/$customerId'
+      preLoaderRoute: typeof AppCustomersCustomerIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/customers/$customerId/edit': {
+      id: '/_app/customers/$customerId/edit'
+      path: '/edit'
+      fullPath: '/customers/$customerId/edit'
+      preLoaderRoute: typeof AppCustomersCustomerIdEditRouteImport
+      parentRoute: typeof AppCustomersCustomerIdRoute
+    }
   }
 }
 
+interface AppCustomersCustomerIdRouteChildren {
+  AppCustomersCustomerIdEditRoute: typeof AppCustomersCustomerIdEditRoute
+}
+
+const AppCustomersCustomerIdRouteChildren: AppCustomersCustomerIdRouteChildren =
+  {
+    AppCustomersCustomerIdEditRoute: AppCustomersCustomerIdEditRoute,
+  }
+
+const AppCustomersCustomerIdRouteWithChildren =
+  AppCustomersCustomerIdRoute._addFileChildren(
+    AppCustomersCustomerIdRouteChildren,
+  )
+
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppInvoicesRoute: typeof AppInvoicesRoute
+  AppOrdersRoute: typeof AppOrdersRoute
+  AppPaymentsRoute: typeof AppPaymentsRoute
+  AppProjectsRoute: typeof AppProjectsRoute
+  AppQuotationsRoute: typeof AppQuotationsRoute
+  AppReportsRoute: typeof AppReportsRoute
+  AppServicesRoute: typeof AppServicesRoute
+  AppCustomersCustomerIdRoute: typeof AppCustomersCustomerIdRouteWithChildren
+  AppCustomersNewRoute: typeof AppCustomersNewRoute
+  AppCustomersIndexRoute: typeof AppCustomersIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppInvoicesRoute: AppInvoicesRoute,
+  AppOrdersRoute: AppOrdersRoute,
+  AppPaymentsRoute: AppPaymentsRoute,
+  AppProjectsRoute: AppProjectsRoute,
+  AppQuotationsRoute: AppQuotationsRoute,
+  AppReportsRoute: AppReportsRoute,
+  AppServicesRoute: AppServicesRoute,
+  AppCustomersCustomerIdRoute: AppCustomersCustomerIdRouteWithChildren,
+  AppCustomersNewRoute: AppCustomersNewRoute,
+  AppCustomersIndexRoute: AppCustomersIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

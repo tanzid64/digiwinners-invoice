@@ -1,0 +1,72 @@
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import {
+	CustomerForm,
+	type CustomerFormValues,
+} from "#/components/customer-form.tsx";
+import { Button } from "#/components/ui/button.tsx";
+import { Card, CardContent } from "#/components/ui/card.tsx";
+import { getCustomer, updateCustomer } from "#/lib/server/customers.ts";
+
+export const Route = createFileRoute("/_app/customers/$customerId/edit")({
+	loader: ({ params }) => getCustomer({ data: params.customerId }),
+	component: EditCustomer,
+});
+
+function EditCustomer() {
+	const data = Route.useLoaderData();
+	const router = useRouter();
+	const { customerId } = Route.useParams();
+	const [submitting, setSubmitting] = useState(false);
+
+	if (!data) return <p>Customer not found.</p>;
+	const c = data.customer;
+
+	async function handle(values: CustomerFormValues) {
+		setSubmitting(true);
+		try {
+			await updateCustomer({ data: { ...values, id: customerId } });
+			await router.navigate({
+				to: "/customers/$customerId",
+				params: { customerId },
+			});
+		} finally {
+			setSubmitting(false);
+		}
+	}
+
+	return (
+		<div className="mx-auto max-w-3xl space-y-6">
+			<div className="flex items-center gap-3">
+				<Button asChild variant="ghost" size="icon">
+					<Link to="/customers/$customerId" params={{ customerId }}>
+						<ArrowLeft className="size-4" />
+					</Link>
+				</Button>
+				<h1 className="text-2xl font-bold tracking-tight">Edit customer</h1>
+			</div>
+			<Card>
+				<CardContent>
+					<CustomerForm
+						submitting={submitting}
+						submitLabel="Save changes"
+						onSubmit={handle}
+						initial={{
+							type: c.type,
+							name: c.name,
+							companyName: c.companyName ?? "",
+							email: c.email ?? "",
+							phone: c.phone ?? "",
+							address: c.address ?? "",
+							taxId: c.taxId ?? "",
+							website: c.website ?? "",
+							status: c.status,
+							notes: c.notes ?? "",
+						}}
+					/>
+				</CardContent>
+			</Card>
+		</div>
+	);
+}

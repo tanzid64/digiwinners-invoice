@@ -220,7 +220,10 @@ export const projects = sqliteTable("projects", {
 		.notNull()
 		.references(() => orders.id, { onDelete: "cascade" }),
 	name: text("name").notNull(),
-	status: text("status").$type<ProjectStatus>().notNull().default("not_started"),
+	status: text("status")
+		.$type<ProjectStatus>()
+		.notNull()
+		.default("not_started"),
 	startDate: integer("start_date", { mode: "timestamp" }),
 	endDate: integer("end_date", { mode: "timestamp" }),
 	progress: integer("progress").notNull().default(0), // 0-100
