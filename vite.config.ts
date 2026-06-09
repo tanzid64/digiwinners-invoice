@@ -9,7 +9,13 @@ import tailwindcss from '@tailwindcss/vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
 
 const config = defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    // Force one React instance — better-auth/react was pulling a 2nd copy
+    // into the SSR bundle, causing "Invalid hook call" / null useContext.
+    dedupe: ['react', 'react-dom'],
+  },
+  ssr: { noExternal: ['better-auth'] },
   plugins: [
     devtools(),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),

@@ -16,8 +16,8 @@
     "check": "biome check",
     "deploy": "npm run build && wrangler deploy",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply receipts-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply receipts-db --remote",
+    "db:migrate": "wrangler d1 migrations apply digiwinners_receipt --local",
+    "db:migrate:remote": "CLOUDFLARE_ACCOUNT_ID=3977a35abe2349652fa3ffd7428d42df wrangler d1 migrations apply digiwinners_receipt --remote",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio"
